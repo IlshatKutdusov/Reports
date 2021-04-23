@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Reports.API.Database;
+using Reports.Database;
 
-namespace Reports.API.Migrations
+namespace Reports.Migrations
 {
     [DbContext(typeof(DataContext))]
     [Migration("20210423103220_Init")]

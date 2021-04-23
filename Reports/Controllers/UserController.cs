@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Reports.API.Models;
-using Reports.API.Services;
+using Reports.Models;
+using Reports.Services;
 using System.Threading.Tasks;
 
-namespace Reports.API.Controllers
+namespace Reports.Controllers
 {
     public class UserController : BaseController
     {

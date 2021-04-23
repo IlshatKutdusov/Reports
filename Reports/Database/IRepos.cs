@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Reports.API.Models;
+using Reports.Models;
 
-namespace Reports.API.Database
+namespace Reports.Database
 {
     public interface IRepos
     {

@@ -1,10 +1,10 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Reports.API.Database;
-using Reports.API.Models;
+using Reports.Database;
+using Reports.Models;
 using AutoMapper;
 
-namespace Reports.API.Services
+namespace Reports.Services
 {
     public class FileService : IFileService
     {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Reports.API.Models;
+using Reports.Models;
 
-namespace Reports.API.Database
+namespace Reports.Database
 {
     public class DataContext : DbContext
     {

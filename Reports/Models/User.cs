@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Reports.API.Models
+namespace Reports.Models
 {
     public class User : BaseEntity
     {

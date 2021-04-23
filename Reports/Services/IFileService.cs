@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
-using Reports.API.Models;
+using Reports.Models;
 
-namespace Reports.API.Services
+namespace Reports.Services
 {
     public interface IFileService
     {

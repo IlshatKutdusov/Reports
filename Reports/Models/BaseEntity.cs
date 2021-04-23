@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Reports.API.Models
+namespace Reports.Models
 {
     public class BaseEntity : IBaseEntity
     {

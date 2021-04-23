@@ -1,4 +1,4 @@
-﻿namespace Reports.API.Models
+﻿namespace Reports.Models
 {
     public class UserEntity : BaseEntity
     {

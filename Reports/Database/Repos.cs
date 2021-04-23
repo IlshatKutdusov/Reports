@@ -1,12 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Reports.API.Models;
+using Reports.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace Reports.API.Database
+namespace Reports.Database
 {
     public class Repos : IRepos
     {
