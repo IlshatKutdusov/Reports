@@ -1,11 +1,10 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Reports.API.Database;
 using Reports.API.Models;
 using AutoMapper;
 
-namespace ReportsService.Database.Services
+namespace Reports.API.Services
 {
     public class UserService : IUserService
     {
@@ -21,7 +20,7 @@ namespace ReportsService.Database.Services
         }
         public async Task<User> Get(int userId)
         {
-            var user = await _repos.Get<User>().Include(e => e.Id).FirstOrDefaultAsync(e => e.Id == userId);
+            var user = await _repos.Get<User>().FirstOrDefaultAsync(e => e.Id == userId);
             
             var entity = _mapper.Map<User>(user);
             
