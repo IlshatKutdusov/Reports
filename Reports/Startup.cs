@@ -7,7 +7,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Reports.API.Database;
 using Reports.API.Models;
-using ReportsService.Database.Services;
+using Reports.API.Services;
 
 namespace Reports
 {
@@ -28,6 +28,7 @@ namespace Reports
 
             services.AddScoped<IRepos, Repos>();
             services.AddTransient<IUserService, UserService>();
+            services.AddTransient<IFileService, FileService>();
             services.AddSingleton(new UserEntity());
 
             services.AddControllers();
