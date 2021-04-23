@@ -10,9 +10,9 @@ namespace Reports.Services
     {
         private readonly IMapper _mapper;
         private readonly IRepos _repos;
-        private readonly UserEntity _userEntity;
+        private readonly User _userEntity;
 
-        public FileService(IMapper mapper, IRepos repos, UserEntity userEntity)
+        public FileService(IMapper mapper, IRepos repos, User userEntity)
         {
             _mapper = mapper;
             _repos = repos;

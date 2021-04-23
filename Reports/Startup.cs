@@ -27,9 +27,10 @@ namespace Reports
             services.AddAutoMapper(typeof(Startup));
 
             services.AddScoped<IRepos, Repos>();
-            services.AddTransient<IUserService, UserService>();
             services.AddTransient<IFileService, FileService>();
-            services.AddSingleton(new UserEntity());
+            services.AddTransient<IUserService, UserService>();
+            services.AddTransient<IReportService, ReportService>();
+            services.AddSingleton(new User());
 
             services.AddControllers();
             services.AddSwaggerGen(c =>

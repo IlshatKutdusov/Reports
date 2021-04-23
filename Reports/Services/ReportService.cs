@@ -6,32 +6,32 @@ using AutoMapper;
 
 namespace Reports.Services
 {
-    public class UserService : IUserService
+    public class ReportService : IReportService
     {
         private readonly IMapper _mapper;
         private readonly IRepos _repos;
         private readonly User _userEntity;
 
-        public UserService(IMapper mapper, IRepos repos, User userEntity)
+        public ReportService(IMapper mapper, IRepos repos, User userEntity)
         {
             _mapper = mapper;
             _repos = repos;
             _userEntity = userEntity;
         }
-        public async Task<User> Get(int userId)
+        public async Task<Report> Get(int reportId)
         {
-            var user = await _repos.Get<User>().FirstOrDefaultAsync(e => e.Id == userId);
-            
-            var entity = _mapper.Map<User>(user);
-            
+            var report = await _repos.Get<Report>().FirstOrDefaultAsync(e => e.Id == reportId);
+
+            var entity = _mapper.Map<Report>(report);
+
             await _repos.SaveChangesAsync();
 
             return entity;
         }
 
-        public async Task<int> Create(User user)
+        public async Task<int> Create(Report report)
         {
-            var entity = _mapper.Map<User>(user);
+            var entity = _mapper.Map<Report>(report);
 
             var result = await _repos.Add(entity);
 
@@ -40,17 +40,17 @@ namespace Reports.Services
             return result;
         }
 
-        public async Task Update(User user)
+        public async Task Update(Report report)
         {
-            var entity = _mapper.Map<User>(user);
+            var entity = _mapper.Map<Report>(report);
 
             await _repos.Update(entity);
             await _repos.SaveChangesAsync();
         }
 
-        public async Task Delete(int userId)
+        public async Task Delete(int reportId)
         {
-            await _repos.Delete<User>(userId);
+            await _repos.Delete<Report>(reportId);
             await _repos.SaveChangesAsync();
         }
     }

@@ -10,5 +10,6 @@ namespace Reports.Database
 
         DbSet<File> File { get; set; }
         DbSet<User> User { get; set; }
+        DbSet<Report> Report { get; set; }
     }
 }
