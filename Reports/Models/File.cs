@@ -1,4 +1,6 @@
-﻿namespace Reports.Models
+﻿using System.Collections.Generic;
+
+namespace Reports.Models
 {
     public class File : BaseEntity
     {
@@ -7,6 +9,8 @@
         public string Name { get; set; }
         public string Path { get; set; }
         public string Size { get; set; }
+
+        public List<Report> Reports { get; set; }
 
     }
 }

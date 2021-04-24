@@ -10,7 +10,7 @@ using Reports.Database;
 namespace Reports.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20210423103220_Init")]
+    [Migration("20210424095458_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,7 +21,7 @@ namespace Reports.Migrations
                 .HasAnnotation("ProductVersion", "5.0.5")
                 .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-            modelBuilder.Entity("Reports.API.Models.File", b =>
+            modelBuilder.Entity("Reports.Models.File", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -35,6 +35,12 @@ namespace Reports.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Path")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Size")
                         .HasColumnType("text");
 
                     b.Property<int>("UserId")
@@ -50,7 +56,7 @@ namespace Reports.Migrations
                     b.ToTable("File");
                 });
 
-            modelBuilder.Entity("Reports.API.Models.User", b =>
+            modelBuilder.Entity("Reports.Models.Report", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -63,19 +69,59 @@ namespace Reports.Migrations
                     b.Property<DateTime>("DateUpdated")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<string>("FirstName")
-                        .HasColumnType("text");
+                    b.Property<int>("FileId")
+                        .HasColumnType("integer");
 
-                    b.Property<string>("LastName")
+                    b.Property<string>("Format")
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
                         .HasColumnType("text");
 
+                    b.Property<string>("Size")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("isActive")
                         .HasColumnType("boolean");
 
-                    b.Property<bool>("isAdmin")
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Report");
+                });
+
+            modelBuilder.Entity("Reports.Models.User", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("HashedPassword")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Login")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Surname")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("isActive")
                         .HasColumnType("boolean");
 
                     b.HasKey("Id");
@@ -83,18 +129,40 @@ namespace Reports.Migrations
                     b.ToTable("User");
                 });
 
-            modelBuilder.Entity("Reports.API.Models.File", b =>
+            modelBuilder.Entity("Reports.Models.File", b =>
                 {
-                    b.HasOne("Reports.API.Models.User", null)
+                    b.HasOne("Reports.Models.User", null)
                         .WithMany("Files")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Reports.API.Models.User", b =>
+            modelBuilder.Entity("Reports.Models.Report", b =>
+                {
+                    b.HasOne("Reports.Models.File", null)
+                        .WithMany("Reports")
+                        .HasForeignKey("FileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Reports.Models.User", null)
+                        .WithMany("Reports")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Reports.Models.File", b =>
+                {
+                    b.Navigation("Reports");
+                });
+
+            modelBuilder.Entity("Reports.Models.User", b =>
                 {
                     b.Navigation("Files");
+
+                    b.Navigation("Reports");
                 });
 #pragma warning restore 612, 618
         }

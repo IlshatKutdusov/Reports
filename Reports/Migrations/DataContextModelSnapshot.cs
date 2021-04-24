@@ -49,6 +49,8 @@ namespace Reports.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("File");
                 });
 
@@ -85,6 +87,10 @@ namespace Reports.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("FileId");
+
+                    b.HasIndex("UserId");
+
                     b.ToTable("Report");
                 });
 
@@ -119,6 +125,42 @@ namespace Reports.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("User");
+                });
+
+            modelBuilder.Entity("Reports.Models.File", b =>
+                {
+                    b.HasOne("Reports.Models.User", null)
+                        .WithMany("Files")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Reports.Models.Report", b =>
+                {
+                    b.HasOne("Reports.Models.File", null)
+                        .WithMany("Reports")
+                        .HasForeignKey("FileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Reports.Models.User", null)
+                        .WithMany("Reports")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Reports.Models.File", b =>
+                {
+                    b.Navigation("Reports");
+                });
+
+            modelBuilder.Entity("Reports.Models.User", b =>
+                {
+                    b.Navigation("Files");
+
+                    b.Navigation("Reports");
                 });
 #pragma warning restore 612, 618
         }
