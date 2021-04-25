@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Reports.Database;
 using Reports.Models;
 using AutoMapper;
+using System.Linq;
 
 namespace Reports.Services
 {
@@ -21,7 +22,11 @@ namespace Reports.Services
         public async Task<User> Get(int userId)
         {
             var user = await _repos.Get<User>().FirstOrDefaultAsync(e => e.Id == userId);
-            
+
+            var files = _repos.Get<File>().Where(e => e.UserId == userId).ToList();
+
+            var reports = _repos.Get<Report>().Where(e => e.UserId == userId).ToList();
+
             var entity = _mapper.Map<User>(user);
             
             await _repos.SaveChangesAsync();

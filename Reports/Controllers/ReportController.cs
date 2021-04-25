@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Reports.Models;
 using Reports.Services;
+using System;
 using System.Threading.Tasks;
 
 namespace Reports.Controllers
@@ -17,33 +18,65 @@ namespace Reports.Controllers
         [HttpGet]
         public async Task<IActionResult> Get(int reportId)
         {
-            var report = await _reportService.Get(reportId);
+            try
+            {
+                var report = await _reportService.Get(reportId);
 
-            return Ok(report);
+                return Ok(report);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
 
         [HttpPost]
         public async Task<IActionResult> Create(Report report)
         {
-            var reportId = await _reportService.Create(report);
+            try
+            {
+                var reportId = await _reportService.Create(report);
 
-            return Ok(reportId);
+                return Ok(reportId);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
 
         [HttpPut]
         public async Task<IActionResult> Update(Report report)
         {
-            await _reportService.Update(report);
+            try
+            {
+                await _reportService.Update(report);
 
-            return Ok();
+                return Ok();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
 
         [HttpDelete]
         public async Task<IActionResult> Delete(int reportId)
         {
-            await _reportService.Delete(reportId);
+            try
+            {
+                await _reportService.Delete(reportId);
 
-            return Ok();
+                return Ok();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
     }
 }
