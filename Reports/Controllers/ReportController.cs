@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Reports.Entities;
 using Reports.Models;
 using Reports.Services;
 using System;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Reports.Controllers
 {
-    public class ReportController : BaseController
+    public class ReportController : ApiControllerBase
     {
         private readonly IReportService _reportService;
 

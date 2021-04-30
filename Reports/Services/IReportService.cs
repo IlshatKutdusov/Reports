@@ -1,4 +1,4 @@
-﻿using Reports.Models;
+﻿using Reports.Entities;
 using System.Threading.Tasks;
 
 namespace Reports.Services

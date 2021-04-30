@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Reports.Models;
+using Reports.Entities;
 using Reports.Services;
 using System;
 using System.Threading.Tasks;
 
 namespace Reports.Controllers
 {
-    public class FileController : BaseController
+    public class FileController : ApiControllerBase
     {
         private readonly IFileService _userService;
 

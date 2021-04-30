@@ -1,9 +1,9 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Reports.Database;
-using Reports.Models;
 using AutoMapper;
 using System.Linq;
+using Reports.Entities;
 
 namespace Reports.Services
 {

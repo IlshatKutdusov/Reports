@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-using Reports.Models;
+using Reports.Entities;
 
 namespace Reports.Database
 {
@@ -12,6 +12,7 @@ namespace Reports.Database
         IQueryable<T> Get<T>(Expression<Func<T, bool>> selector) where T : class, IBaseEntity;
         IQueryable<T> Get<T>() where T : class, IBaseEntity;
         IQueryable<T> GetAll<T>() where T : class, IBaseEntity;
+
         Task<int> Add<T>(T newEntity) where T : class, IBaseEntity;
         Task AddRange<T>(IEnumerable<T> newEntities) where T : class, IBaseEntity;
 

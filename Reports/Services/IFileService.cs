@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Reports.Models;
+using Reports.Entities;
 
 namespace Reports.Services
 {

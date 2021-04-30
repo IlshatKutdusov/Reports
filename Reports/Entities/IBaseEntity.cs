@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Reports.Models
+namespace Reports.Entities
 {
     public interface IBaseEntity
     {

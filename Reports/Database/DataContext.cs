@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Reports.Models;
+using Reports.Entities;
 
 namespace Reports.Database
 {
@@ -11,5 +11,20 @@ namespace Reports.Database
         DbSet<File> File { get; set; }
         DbSet<User> User { get; set; }
         DbSet<Report> Report { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<File>()
+                .HasIndex(e => e.Name)
+                .IsUnique();
+
+            builder.Entity<User>()
+                .HasIndex(e => e.Login)
+                .IsUnique();
+
+            builder.Entity<Report>()
+                .HasIndex(e => e.Name)
+                .IsUnique();
+        }
     }
 }

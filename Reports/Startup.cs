@@ -6,8 +6,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Reports.Database;
-using Reports.Models;
+using Reports.Entities;
 using Reports.Services;
+using Reports.Services.Helpers;
 
 namespace Reports
 {
@@ -32,6 +33,7 @@ namespace Reports
             services.AddTransient<IReportService, ReportService>();
             services.AddSingleton(new User());
 
+            services.AddCors();
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
@@ -53,6 +55,13 @@ namespace Reports
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseCors(x => x
+                .AllowAnyOrigin()
+                .AllowAnyMethod()
+                .AllowAnyHeader());
+
+            app.UseMiddleware<JwtMiddleware>();
 
             app.UseEndpoints(endpoints =>
             {

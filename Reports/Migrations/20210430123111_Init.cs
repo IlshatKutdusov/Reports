@@ -14,10 +14,10 @@ namespace Reports.Migrations
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    Surname = table.Column<string>(type: "text", nullable: true),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Login = table.Column<string>(type: "text", nullable: false),
-                    HashedPassword = table.Column<string>(type: "text", nullable: false),
+                    Surname = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    Name = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    Login = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    HashedPassword = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
                     DateCreated = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     DateUpdated = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     isActive = table.Column<bool>(type: "boolean", nullable: false)
@@ -25,7 +25,6 @@ namespace Reports.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_User", x => x.Id);
-                    table.UniqueConstraint("UC_Login", x => x.Login);
                 });
 
             migrationBuilder.CreateTable(
@@ -35,9 +34,9 @@ namespace Reports.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<int>(type: "integer", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Path = table.Column<string>(type: "text", nullable: false),
-                    Size = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    Path = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    Size = table.Column<int>(type: "integer", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     DateUpdated = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     isActive = table.Column<bool>(type: "boolean", nullable: false)
@@ -61,9 +60,10 @@ namespace Reports.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     FileId = table.Column<int>(type: "integer", nullable: false),
-                    Name = table.Column<string>(type: "text", nullable: false),
-                    Format = table.Column<string>(type: "text", nullable: false),
-                    Size = table.Column<string>(type: "text", nullable: false),
+                    Name = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    Path = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    Format = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    Size = table.Column<int>(type: "integer", nullable: false),
                     DateCreated = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     DateUpdated = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     isActive = table.Column<bool>(type: "boolean", nullable: false)
@@ -86,6 +86,12 @@ namespace Reports.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_File_Name",
+                table: "File",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_File_UserId",
                 table: "File",
                 column: "UserId");
@@ -96,9 +102,21 @@ namespace Reports.Migrations
                 column: "FileId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Report_Name",
+                table: "Report",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Report_UserId",
                 table: "Report",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_User_Login",
+                table: "User",
+                column: "Login",
+                unique: true);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
