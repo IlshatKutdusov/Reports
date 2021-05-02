@@ -22,6 +22,9 @@ namespace Reports.Entities
         [StringLength(maximumLength: 30, MinimumLength = 3, ErrorMessage = "У пользователя пароль должен содержать от 3 до 30 символов!")]
         public string HashedPassword { get; set; }
 
+        [Required(ErrorMessage = "У пользователя не указан Email")]
+        public string Email { get; set; }
+
 
         public IList<File> Files { get; set; }
         public IList<Report> Reports { get; set; }
