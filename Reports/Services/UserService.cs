@@ -48,10 +48,9 @@ namespace Reports.Services
             return entity;
         }
 
-        public async Task<int> Create(User user)
+        public async Task<int> Create(RegistrationRequest registrationRequest)
         {
-            var entity = _mapper.Map<User>(user);
-
+            var entity = _mapper.Map<RegistrationRequest, User>(registrationRequest);
             var result = await _repos.Add(entity);
 
             await _repos.SaveChangesAsync();
@@ -139,6 +138,11 @@ namespace Reports.Services
                 return new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." };
 
             return new Response { Status = "Success", Message = "User created successfully!" };
+        }
+
+        private bool VerifyPassword(string password, string hashedPassword)
+        {
+            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
         }
     }
 }
