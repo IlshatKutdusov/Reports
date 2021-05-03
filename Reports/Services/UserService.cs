@@ -1,12 +1,20 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Reports.Database;
-using Reports.Models;
 using AutoMapper;
 using System.Linq;
 using Reports.Entities;
 using Microsoft.Extensions.Configuration;
-using Reports.Services.Helpers;
+using Reports.Authentication;
+using Microsoft.AspNetCore.Identity;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System;
+using System.Text;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace Reports.Services
 {
@@ -15,21 +23,23 @@ namespace Reports.Services
         private readonly IMapper _mapper;
         private readonly IRepos _repos;
         private readonly IConfiguration _configuration;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public UserService(IMapper mapper, IRepos repos, User userEntity, IConfiguration configuration)
+        public UserService(IMapper mapper, IRepos repos, IConfiguration configuration, UserManager<ApplicationUser> userManager)
         {
             _mapper = mapper;
             _repos = repos;
             _configuration = configuration;
+            this._userManager = userManager;
         }
 
-        public async Task<User> GetById(int userId)
+        public async Task<User> GetByLogin(string userLogin)
         {
-            var user = await _repos.Get<User>().FirstOrDefaultAsync(e => e.Id == userId);
+            var user = await _repos.Get<User>().FirstOrDefaultAsync(e => e.Login == userLogin);
 
-            var files = _repos.Get<File>().Where(e => e.UserId == userId).ToList();
+            var files = _repos.Get<File>().Where(e => e.UserId == user.Id).ToList();
 
-            var reports = _repos.Get<Report>().Where(e => e.UserId == userId).ToList();
+            var reports = _repos.Get<Report>().Where(e => e.UserId == user.Id).ToList();
 
             var entity = _mapper.Map<User>(user);
             
@@ -46,8 +56,6 @@ namespace Reports.Services
 
             await _repos.SaveChangesAsync();
 
-            await Register(user);
-
             return result;
         }
 
@@ -59,33 +67,78 @@ namespace Reports.Services
             await _repos.SaveChangesAsync();
         }
 
-        public async Task Delete(User userId)
+        public async Task Delete(User user)
         {
-            await _repos.Remove<User>(userId);
+            await _repos.Remove<User>(user);
             await _repos.SaveChangesAsync();
         }
 
-        public AuthenticateResponse Authenticate(AuthenticateRequest authenticateRequest)
+        public async Task<Response> Login(LoginModel loginModel)
         {
-            var user = _repos.GetAll<User>().FirstOrDefault(e => e.Login == authenticateRequest.Login && e.HashedPassword == authenticateRequest.Password);
+            var user = await _userManager.FindByNameAsync(loginModel.Login);
+            if (user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password))
+            {
+                var userRoles = await _userManager.GetRolesAsync(user);
 
-            if (user == null)
-                return null;
+                var authClaims = new List<Claim>
+                {
+                    new Claim(ClaimTypes.Name, user.UserName),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                };
 
-            var token = _configuration.GenerateJwtToken(user);
+                foreach (var userRole in userRoles)
+                {
+                    authClaims.Add(new Claim(ClaimTypes.Role, userRole));
+                }
 
-            return new AuthenticateResponse(user, token);
+                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
+
+                var token = new JwtSecurityToken(
+                    issuer: _configuration["JWT:ValidIssuer"],
+                    audience: _configuration["JWT:ValidAudience"],
+                    expires: DateTime.Now.AddHours(3),
+                    claims: authClaims,
+                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                    );
+
+                return new Response
+                {
+                    Status = "Success",
+                    Message = "Token: " + new JwtSecurityTokenHandler().WriteToken(token)
+                };
+            }
+            return new Response
+            {
+                Status = "Error",
+                Message = "User not founded!"
+            };
         }
 
-        public async Task<AuthenticateResponse> Register(User user)
+        public async Task<Response> Register(RegisterModel registerModel)
         {
-            var response = Authenticate(new AuthenticateRequest
-            { 
-                Login = user.Login,
-                Password = user.HashedPassword
+            var userExists = await _userManager.FindByNameAsync(registerModel.Login);
+            if (userExists != null)
+                return new Response { Status = "Error", Message = "User already exists!" };
+
+            ApplicationUser user = new ApplicationUser()
+            {
+                Email = registerModel.Email,
+                SecurityStamp = Guid.NewGuid().ToString(),
+                UserName = registerModel.Login
+            };
+
+            await Create(new User()
+            {
+                Surname = registerModel.Surname,
+                Name = registerModel.Name,
+                Login = registerModel.Login
             });
 
-            return response;
+            var result = await _userManager.CreateAsync(user, registerModel.Password);
+            if (!result.Succeeded)
+                return new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." };
+
+            return new Response { Status = "Success", Message = "User created successfully!" };
         }
     }
 }

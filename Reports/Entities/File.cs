@@ -19,12 +19,6 @@ namespace Reports.Entities
         [Required(ErrorMessage = "У файла не указан размер!")]
         public int Size { get; set; }
 
-
-        [Required(ErrorMessage = "У файла не указан id пользователя!")]
-        public User User { get; set; }
-
-
-        public IList<Report> Reports { get; set; }
-
+        public List<Report> Reports { get; set; }
     }
 }

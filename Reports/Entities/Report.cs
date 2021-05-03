@@ -24,9 +24,5 @@ namespace Reports.Entities
 
         [Required(ErrorMessage = "У отчета не указан размер!")]
         public int Size { get; set; }
-
-
-        [Required(ErrorMessage = "У отчета нет файла!")]
-        public File File { get; set; }
     }
 }

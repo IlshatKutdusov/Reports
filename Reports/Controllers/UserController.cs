@@ -1,65 +1,78 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using Reports.Authentication;
 using Reports.Entities;
-using Reports.Models;
 using Reports.Services;
 using System;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Reports.Controllers
 {
+    [Authorize]
     public class UserController : ApiControllerBase
     {
+        private readonly UserManager<ApplicationUser> userManager;
+        private readonly IConfiguration _configuration;
         private readonly IUserService _userService;
 
-        public UserController(IUserService userService)
+        public UserController(UserManager<ApplicationUser> userManager, IConfiguration configuration, IUserService userService)
         {
+            this.userManager = userManager;
+            _configuration = configuration;
             _userService = userService;
         }
 
-        [HttpPut("Autherticate")]
-        public async Task<IActionResult> Authenticate(AuthenticateRequest authenticateRequest)
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("login")]
+        public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         {
             try
             {
-                var user = _userService.Authenticate(authenticateRequest);
+                var response = await _userService.Login(loginModel);
 
-                if (user == null)
-                    return BadRequest(new { message = "Неправильно введен логин или пароль!" });
-
-                return Ok(user);
+                return Ok(response);
             }
             catch (Exception)
             {
+
                 throw;
             }
         }
 
-        [HttpPut("Register")]
-        public async Task<IActionResult> Register(User user)
+
+        [AllowAnonymous]
+        [HttpPost]
+        [Route("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterModel registerModel)
         {
             try
             {
-                var response = await _userService.Create(user);
+                var response = await _userService.Register(registerModel);
 
-                if (user == null)
-                    return BadRequest(new { message = "Регистрация пользователя завершилась с ошибкой!" });
-
-                return Ok(user);
+                return Ok(response);
             }
             catch (Exception)
             {
+
                 throw;
             }
         }
 
-        [Authorize]
         [HttpGet]
-        public async Task<IActionResult> Get(int userId)
+        public async Task<IActionResult> GetByLogin(string userLogin)
         {
             try
             {
-                var user = await _userService.GetById(userId);
+                var user = await _userService.GetByLogin(userLogin);
 
                 return Ok(user);
             }
@@ -70,7 +83,6 @@ namespace Reports.Controllers
             }
         }
 
-        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Create(User user)
         {
@@ -87,7 +99,6 @@ namespace Reports.Controllers
             }
         }
 
-        [Authorize]
         [HttpPut]
         public async Task<IActionResult> Update(User user)
         {
@@ -104,13 +115,12 @@ namespace Reports.Controllers
             }
         }
 
-        [Authorize]
         [HttpDelete]
-        public async Task<IActionResult> Delete(User userId)
+        public async Task<IActionResult> Delete(User user)
         {
             try
             {
-                await _userService.Delete(userId);
+                await _userService.Delete(user);
 
                 return Ok();
             }

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Reports.Entities;
-using Reports.Models;
 using Reports.Services;
 using System;
 using System.Threading.Tasks;

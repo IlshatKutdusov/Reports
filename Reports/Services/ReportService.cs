@@ -13,14 +13,12 @@ namespace Reports.Services
         private readonly IMapper _mapper;
         private readonly IRepos _repos;
         private readonly IFileService _fileService;
-        private readonly User _userEntity;
 
-        public ReportService(IMapper mapper, IRepos repos, IFileService fileService, User userEntity)
+        public ReportService(IMapper mapper, IRepos repos, IFileService fileService)
         {
             _mapper = mapper;
             _repos = repos;
             _fileService = fileService;
-            _userEntity = userEntity;
         }
         public async Task<Report> Get(int reportId)
         {

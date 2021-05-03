@@ -1,17 +1,17 @@
 ﻿using System.Threading.Tasks;
+using Reports.Authentication;
 using Reports.Entities;
-using Reports.Models;
 
 namespace Reports.Services
 {
     public interface IUserService
     {
-        AuthenticateResponse Authenticate(AuthenticateRequest authenticateRequest);
-        Task<AuthenticateResponse> Register(User user);
+        Task<Response> Login(LoginModel loginModel);
+        Task<Response> Register(RegisterModel registerModel);
 
-        Task<User> GetById(int userId);
+        Task<User> GetByLogin(string userLogin);
         Task<int> Create(User user);
         Task Update(User user);
-        Task Delete(User userId);
+        Task Delete(User user);
     }
 }
