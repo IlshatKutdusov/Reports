@@ -38,15 +38,12 @@ namespace Reports.Services
             return entity;
         }
 
-        public async Task<int> Create(User user)
+        public async Task<int> Create(RegistrationRequest registrationRequest)
         {
-            var entity = _mapper.Map<User>(user);
-
+            var entity = _mapper.Map<RegistrationRequest, User>(registrationRequest);
             var result = await _repos.Add(entity);
 
             await _repos.SaveChangesAsync();
-
-            await Register(user);
 
             return result;
         }
@@ -67,7 +64,11 @@ namespace Reports.Services
 
         public AuthenticateResponse Authenticate(AuthenticateRequest authenticateRequest)
         {
-            var user = _repos.GetAll<User>().FirstOrDefault(e => e.Login == authenticateRequest.Login && e.HashedPassword == authenticateRequest.Password);
+            var user = _repos
+                .GetAll<User>()
+                .AsEnumerable()
+                .FirstOrDefault(e => e.Login == authenticateRequest.Login
+                    && VerifyPassword(authenticateRequest.Password, e.HashedPassword));
 
             if (user == null)
                 return null;
@@ -77,7 +78,7 @@ namespace Reports.Services
             return new AuthenticateResponse(user, token);
         }
 
-        public async Task<AuthenticateResponse> Register(User user)
+        public async Task<AuthenticateResponse> Register(User user) //?
         {
             var response = Authenticate(new AuthenticateRequest
             { 
@@ -86,6 +87,11 @@ namespace Reports.Services
             });
 
             return response;
+        }
+
+        private bool VerifyPassword(string password, string hashedPassword)
+        {
+            return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Reports.Services
         Task<AuthenticateResponse> Register(User user);
 
         Task<User> GetById(int userId);
-        Task<int> Create(User user);
+        Task<int> Create(RegistrationRequest user);
         Task Update(User user);
         Task Delete(User userId);
     }

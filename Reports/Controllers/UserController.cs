@@ -36,19 +36,17 @@ namespace Reports.Controllers
         }
 
         [HttpPut("Register")]
-        public async Task<IActionResult> Register(User user)
+        public async Task<IActionResult> Register(RegistrationRequest registrationRequest)
         {
             try
             {
-                var response = await _userService.Create(user);
+                var id = await _userService.Create(registrationRequest);
 
-                if (user == null)
-                    return BadRequest(new { message = "Регистрация пользователя завершилась с ошибкой!" });
-
-                return Ok(user);
+                return Ok(id);
             }
             catch (Exception)
             {
+                return BadRequest(new { message = "Регистрация пользователя завершилась с ошибкой!" });
                 throw;
             }
         }
@@ -62,23 +60,6 @@ namespace Reports.Controllers
                 var user = await _userService.GetById(userId);
 
                 return Ok(user);
-            }
-            catch (Exception)
-            {
-
-                throw;
-            }
-        }
-
-        [Authorize]
-        [HttpPost]
-        public async Task<IActionResult> Create(User user)
-        {
-            try
-            {
-                var userId = await _userService.Create(user);
-
-                return Ok(userId);
             }
             catch (Exception)
             {
