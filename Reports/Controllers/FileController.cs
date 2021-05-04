@@ -1,28 +1,39 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Reports.Authentication;
 using Reports.Entities;
 using Reports.Services;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Reports.Controllers
 {
     public class FileController : ApiControllerBase
     {
-        private readonly IFileService _userService;
+        private readonly IFileService _fileService;
+        private readonly IUserService _userService;
 
-        public FileController(IFileService userService)
+        public FileController(IFileService fileService, IUserService userService)
         {
+            _fileService = fileService;
             _userService = userService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get(int fileId)
+        public async Task<IActionResult> GetById(int fileId)
         {
             try
             {
-                var file = await _userService.Get(fileId);
+                var file = await _fileService.GetById(fileId);
+                var user = await _userService.GetById(file.UserId);
 
-                return Ok(file);
+                if (GetCurrentUserName() == user.Login)
+                {
+                    return Ok(file); 
+                }
+
+                return BadRequest();
             }
             catch (Exception)
             {
@@ -36,9 +47,16 @@ namespace Reports.Controllers
         {
             try
             {
-                var fileId = await _userService.Create(file);
+                var user = await _userService.GetById(file.UserId);
 
-                return Ok(fileId);
+                if (GetCurrentUserName() == user.Login)
+                {
+                    var fileId = await _fileService.Create(file);
+
+                    return Ok(fileId); 
+                }
+
+                return BadRequest();
             }
             catch (Exception)
             {
@@ -52,9 +70,16 @@ namespace Reports.Controllers
         {
             try
             {
-                await _userService.Update(file);
+                var user = await _userService.GetById(file.UserId);
 
-                return Ok();
+                if (GetCurrentUserName() == user.Login)
+                {
+                    await _fileService.Update(file);
+
+                    return Ok(); 
+                }
+
+                return BadRequest();
             }
             catch (Exception)
             {
@@ -68,9 +93,17 @@ namespace Reports.Controllers
         {
             try
             {
-                await _userService.Delete(fileId);
+                var file = await _fileService.GetById(fileId);
+                var user = await _userService.GetById(file.UserId);
 
-                return Ok();
+                if (GetCurrentUserName() == user.Login)
+                {
+                    await _fileService.Delete(fileId);
+
+                    return Ok(); 
+                }
+
+                return BadRequest();
             }
             catch (Exception)
             {
@@ -78,5 +111,7 @@ namespace Reports.Controllers
                 throw;
             }
         }
+
+        private string GetCurrentUserName() => User.FindFirstValue(ClaimTypes.Name);
     }
 }

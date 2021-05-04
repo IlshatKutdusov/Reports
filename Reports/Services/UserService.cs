@@ -13,8 +13,6 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Text;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
 
 namespace Reports.Services
 {
@@ -31,6 +29,21 @@ namespace Reports.Services
             _repos = repos;
             _configuration = configuration;
             this._userManager = userManager;
+        }
+
+        public async Task<User> GetById(int userId)
+        {
+            var user = await _repos.Get<User>().FirstOrDefaultAsync(e => e.Id == userId);
+
+            var files = _repos.Get<File>().Where(e => e.UserId == user.Id).ToList();
+
+            var reports = _repos.Get<Report>().Where(e => e.UserId == user.Id).ToList();
+
+            var entity = _mapper.Map<User>(user);
+
+            await _repos.SaveChangesAsync();
+
+            return entity;
         }
 
         public async Task<User> GetByLogin(string userLogin)

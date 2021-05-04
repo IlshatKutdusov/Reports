@@ -1,38 +1,28 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
 using Reports.Authentication;
 using Reports.Entities;
 using Reports.Services;
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Reports.Controllers
 {
-    [Authorize]
     public class UserController : ApiControllerBase
     {
-        private readonly UserManager<ApplicationUser> userManager;
-        private readonly IConfiguration _configuration;
         private readonly IUserService _userService;
 
-        public UserController(UserManager<ApplicationUser> userManager, IConfiguration configuration, IUserService userService)
+        public UserController(IUserService userService)
         {
-            this.userManager = userManager;
-            _configuration = configuration;
             _userService = userService;
         }
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("login")]
+        [Route("Login")]
         public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         {
             try
@@ -43,7 +33,6 @@ namespace Reports.Controllers
             }
             catch (Exception)
             {
-
                 throw;
             }
         }
@@ -51,7 +40,7 @@ namespace Reports.Controllers
 
         [AllowAnonymous]
         [HttpPost]
-        [Route("register")]
+        [Route("Register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel registerModel)
         {
             try
@@ -62,7 +51,6 @@ namespace Reports.Controllers
             }
             catch (Exception)
             {
-
                 throw;
             }
         }
@@ -72,29 +60,17 @@ namespace Reports.Controllers
         {
             try
             {
-                var user = await _userService.GetByLogin(userLogin);
+                if (GetCurrentUserName() == userLogin)
+                {
+                    var user = await _userService.GetByLogin(userLogin);
 
-                return Ok(user);
+                    return Ok(user); 
+                }
+
+                return BadRequest();
             }
             catch (Exception)
             {
-
-                throw;
-            }
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Create(User user)
-        {
-            try
-            {
-                var userId = await _userService.Create(user);
-
-                return Ok(userId);
-            }
-            catch (Exception)
-            {
-
                 throw;
             }
         }
@@ -104,13 +80,17 @@ namespace Reports.Controllers
         {
             try
             {
-                await _userService.Update(user);
+                if (GetCurrentUserName() == user.Login)
+                {
+                    await _userService.Update(user);
 
-                return Ok();
+                    return Ok(); 
+                }
+
+                return BadRequest();
             }
             catch (Exception)
             {
-
                 throw;
             }
         }
@@ -120,15 +100,21 @@ namespace Reports.Controllers
         {
             try
             {
-                await _userService.Delete(user);
+                if (GetCurrentUserName() == user.Login)
+                {
+                    await _userService.Delete(user);
 
-                return Ok();
+                    return Ok(); 
+                }
+
+                return BadRequest();
             }
             catch (Exception)
             {
-
                 throw;
             }
         }
+
+        private string GetCurrentUserName() => User.FindFirstValue(ClaimTypes.Name);
     }
 }

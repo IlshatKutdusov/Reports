@@ -17,7 +17,7 @@ namespace Reports.Services
             _mapper = mapper;
             _repos = repos;
         }
-        public async Task<File> Get(int fileId)
+        public async Task<File> GetById(int fileId)
         {
             var file = await _repos.Get<File>().FirstOrDefaultAsync(e => e.Id == fileId);
             var reports = _repos.Get<Report>().Where(e => e.FileId == file.Id).ToList();

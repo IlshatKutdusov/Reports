@@ -6,7 +6,7 @@ namespace Reports.Services
     public interface IFileService
     {
         Task<int> Create(File file);
-        Task<File> Get(int fileId);
+        Task<File> GetById(int fileId);
         Task Update(File file);
         Task Delete(int fileId);
     }

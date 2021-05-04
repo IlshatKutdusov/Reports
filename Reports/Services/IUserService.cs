@@ -9,6 +9,7 @@ namespace Reports.Services
         Task<Response> Login(LoginModel loginModel);
         Task<Response> Register(RegisterModel registerModel);
 
+        Task<User> GetById(int userId);
         Task<User> GetByLogin(string userLogin);
         Task<int> Create(User user);
         Task Update(User user);

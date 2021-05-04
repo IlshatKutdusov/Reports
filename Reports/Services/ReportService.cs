@@ -20,7 +20,7 @@ namespace Reports.Services
             _repos = repos;
             _fileService = fileService;
         }
-        public async Task<Report> Get(int reportId)
+        public async Task<Report> GetById(int reportId)
         {
             var report = await _repos.Get<Report>().FirstOrDefaultAsync(e => e.Id == reportId);
 
@@ -62,7 +62,7 @@ namespace Reports.Services
         {
             if (report.Format == "excel")
             {
-                var file = await _fileService.Get(report.FileId);
+                var file = await _fileService.GetById(report.FileId);
                 string fromFile = file.Path + file.Name;
 
                 var format = new ExcelTextFormat();
