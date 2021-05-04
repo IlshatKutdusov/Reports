@@ -62,7 +62,7 @@ namespace Reports.Services
 
             if (report.IsCreated)
             {
-                await Generate(newReport);
+                Generate(newReport);
 
                 return new CreationResponse() { IsCreated = true, Result = report.Result};
             }

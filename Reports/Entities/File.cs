@@ -5,6 +5,9 @@ namespace Reports.Entities
 {
     public class File : BaseEntity
     {
+        [Key]
+        public int Id { get; set; }
+
         [Required(ErrorMessage = "У файла не указан id пользователя!")]
         public int UserId { get; set; }
 

@@ -4,6 +4,9 @@ namespace Reports.Entities
 {
     public class Report : BaseEntity
     {
+        [Key]
+        public int Id { get; set; }
+
         [Required(ErrorMessage = "У отчета не указан id пользователя!")]
         public int UserId { get; set; }
 
