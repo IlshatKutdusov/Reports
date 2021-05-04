@@ -9,7 +9,6 @@ namespace Reports.Database
 {
     public interface IRepos
     {
-        IQueryable<T> Get<T>(Expression<Func<T, bool>> selector) where T : class, IBaseEntity;
         IQueryable<T> Get<T>() where T : class, IBaseEntity;
         IQueryable<T> GetAll<T>() where T : class, IBaseEntity;
 

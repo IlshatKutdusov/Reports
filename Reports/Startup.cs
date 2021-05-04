@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Reports.Authentication;
+using Reports.Models;
 using Reports.Database;
 using Reports.Entities;
 using Reports.Services;

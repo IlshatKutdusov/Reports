@@ -5,11 +5,14 @@ using Reports.Entities;
 using AutoMapper;
 using OfficeOpenXml;
 using System.IO;
+using Reports.Models;
 
 namespace Reports.Services
 {
     public class ReportService : IReportService
     {
+        private readonly string ApplicationPath = System.IO.Directory.GetCurrentDirectory() + "\\SourceData\\Reports\\";
+
         private readonly IMapper _mapper;
         private readonly IRepos _repos;
         private readonly IFileService _fileService;
@@ -31,7 +34,7 @@ namespace Reports.Services
             return entity;
         }
 
-        public async Task<int> Create(Report report)
+        public async Task<CreationResponse> Create(Report report)
         {
             var entity = _mapper.Map<Report>(report);
 
@@ -41,7 +44,32 @@ namespace Reports.Services
 
             await _repos.SaveChangesAsync();
 
-            return result;
+            return new CreationResponse() { IsCreated = true, Result = result};
+        }
+
+        public async Task<CreationResponse> CreateReportFromFile(Reports.Entities.File file, string format)
+        {
+            var newReport = new Report()
+            {
+                UserId = file.UserId,
+                FileId = file.Id,
+                Name = "Report_" + file.Name.Remove(file.Name.Length - 4, 4) + ".xlsx",
+                Path = ApplicationPath,
+                Format = format
+            };
+
+            var report = await Create(newReport);
+
+            if (report.IsCreated)
+            {
+                await Generate(newReport);
+
+                return new CreationResponse() { IsCreated = true, Result = report.Result};
+            }
+            else
+            {
+                return new CreationResponse() { IsCreated = false};
+            }
         }
 
         public async Task Update(Report report)
@@ -60,6 +88,11 @@ namespace Reports.Services
 
         public async Task Generate(Report report)
         {
+            if (!System.IO.Directory.Exists(ApplicationPath))
+            {
+                System.IO.Directory.CreateDirectory(ApplicationPath);
+            }
+
             if (report.Format == "excel")
             {
                 var file = await _fileService.GetById(report.FileId);
