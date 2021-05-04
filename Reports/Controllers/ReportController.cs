@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Reports.Authentication;
+using Reports.Models;
 using Reports.Entities;
 using Reports.Services;
 using System;
@@ -52,7 +52,30 @@ namespace Reports.Controllers
                 {
                     var reportId = await _reportService.Create(report);
 
-                    return Ok(reportId); 
+                    return Ok(reportId);
+                }
+
+                return BadRequest();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        [HttpPost]
+        [Route("Generate")]
+        public async Task<IActionResult> CreateReportFromFile(File file, string format)
+        {
+            try
+            {
+                var user = await _userService.GetById(file.UserId);
+
+                if (GetCurrentUserName() == user.Login)
+                {
+                    var reportId = await _reportService.CreateReportFromFile(file, format);
+
+                    return Ok(reportId);
                 }
 
                 return BadRequest();

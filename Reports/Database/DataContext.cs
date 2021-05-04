@@ -1,7 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Reports.Authentication;
+using Reports.Models;
 using Reports.Entities;
 
 namespace Reports.Database
@@ -26,12 +25,6 @@ namespace Reports.Database
             builder.Entity<Report>()
                 .HasIndex(e => e.Name)
                 .IsUnique();
-
-            /*builder.Ignore<IdentityUserLogin<string>>();
-            builder.Ignore<IdentityUserRole<string>>();
-            builder.Ignore<IdentityUserClaim<string>>();
-            builder.Ignore<IdentityUserToken<string>>();
-            builder.Ignore<IdentityUser<string>>();*/
         }
     }
 }

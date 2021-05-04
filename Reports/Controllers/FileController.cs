@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Reports.Authentication;
+using Reports.Models;
 using Reports.Entities;
 using Reports.Services;
 using System;
@@ -52,6 +53,28 @@ namespace Reports.Controllers
                 if (GetCurrentUserName() == user.Login)
                 {
                     var fileId = await _fileService.Create(file);
+
+                    return Ok(fileId); 
+                }
+
+                return BadRequest();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        [HttpPost]
+        [Route("Upload")]
+        public async Task<IActionResult> Upload(string userLogin, IFormFile upload)
+        {
+            try
+            {
+                if (GetCurrentUserName() == userLogin && upload != null)
+                {
+                    var fileId = await _fileService.UploadFile(userLogin, upload);
 
                     return Ok(fileId); 
                 }

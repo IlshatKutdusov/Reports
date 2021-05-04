@@ -5,7 +5,7 @@ using AutoMapper;
 using System.Linq;
 using Reports.Entities;
 using Microsoft.Extensions.Configuration;
-using Reports.Authentication;
+using Reports.Models;
 using Microsoft.AspNetCore.Identity;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -61,7 +61,7 @@ namespace Reports.Services
             return entity;
         }
 
-        public async Task<int> Create(User user)
+        public async Task<CreationResponse> Create(User user)
         {
             var entity = _mapper.Map<User>(user);
 
@@ -69,7 +69,7 @@ namespace Reports.Services
 
             await _repos.SaveChangesAsync();
 
-            return result;
+            return new CreationResponse() { IsCreated = true, Result = result};
         }
 
         public async Task Update(User user)
@@ -140,16 +140,16 @@ namespace Reports.Services
                 UserName = registerModel.Login
             };
 
+            var result = await _userManager.CreateAsync(user, registerModel.Password);
+            if (!result.Succeeded)
+                return new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." };
+
             await Create(new User()
             {
                 Surname = registerModel.Surname,
                 Name = registerModel.Name,
                 Login = registerModel.Login
             });
-
-            var result = await _userManager.CreateAsync(user, registerModel.Password);
-            if (!result.Succeeded)
-                return new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." };
 
             return new Response { Status = "Success", Message = "User created successfully!" };
         }

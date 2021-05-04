@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
-using Reports.Authentication;
+using Reports.Models;
 using Reports.Entities;
 using Reports.Services;
 using System;

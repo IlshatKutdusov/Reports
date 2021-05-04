@@ -1,4 +1,4 @@
-﻿namespace Reports.Authentication
+﻿namespace Reports.Models
 {
     public class Response
     {

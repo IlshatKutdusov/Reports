@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using Reports.Authentication;
+using Reports.Models;
 using Reports.Entities;
 
 namespace Reports.Services
@@ -11,7 +11,7 @@ namespace Reports.Services
 
         Task<User> GetById(int userId);
         Task<User> GetByLogin(string userLogin);
-        Task<int> Create(User user);
+        Task<CreationResponse> Create(User user);
         Task Update(User user);
         Task Delete(User user);
     }
