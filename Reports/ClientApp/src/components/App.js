@@ -3,7 +3,11 @@ import './App.css';
 
 function App() {
   return (
+    <>
     <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+
+    <Footer />
+    </>
   );
 }
 
