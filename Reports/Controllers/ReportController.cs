@@ -26,18 +26,28 @@ namespace Reports.Controllers
             try
             {
                 var report = await _reportService.GetById(reportId);
-                var user = await _userService.GetById(report.UserId);
 
-                if (GetCurrentUserName() == user.Login)
+                if (report != null)
                 {
-                    return Ok(report); 
+                    var user = await _userService.GetById(report.UserId);
+
+                    if (GetCurrentUserName() == user.Login)
+                    {
+                        return Ok(report);
+                    }
+
+                    return BadRequest("Access is denied!");
                 }
 
-                return BadRequest();
+                return BadRequest("The report not found!");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                return BadRequest(new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 
@@ -50,16 +60,20 @@ namespace Reports.Controllers
 
                 if (GetCurrentUserName() == user.Login)
                 {
-                    var reportId = await _reportService.Create(report);
+                    var response = await _reportService.Create(report);
 
-                    return Ok(reportId);
+                    return Ok(response);
                 }
 
-                return BadRequest();
+                return BadRequest("Access is denied!");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                return BadRequest(new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 
@@ -73,16 +87,20 @@ namespace Reports.Controllers
 
                 if (GetCurrentUserName() == user.Login)
                 {
-                    var reportId = await _reportService.CreateReportFromFile(file, format);
+                    var response = await _reportService.CreateReportFromFile(file, format);
 
-                    return Ok(reportId);
+                    return Ok(response);
                 }
 
-                return BadRequest();
+                return BadRequest("Access is denied!");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                return BadRequest(new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 
@@ -95,16 +113,20 @@ namespace Reports.Controllers
 
                 if (GetCurrentUserName() == user.Login)
                 {
-                    await _reportService.Update(report);
+                    var response = await _reportService.Update(report);
 
-                    return Ok(); 
+                    return Ok(response); 
                 }
 
-                return BadRequest();
+                return BadRequest("Access is denied!");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                return BadRequest(new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 
@@ -118,16 +140,20 @@ namespace Reports.Controllers
 
                 if (GetCurrentUserName() == user.Login)
                 {
-                    await _reportService.Delete(reportId);
+                    var response = await _reportService.Remove(reportId);
 
-                    return Ok(); 
+                    return Ok(response); 
                 }
 
-                return BadRequest();
+                return BadRequest("Access is denied!");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                return BadRequest(new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 

@@ -35,58 +35,91 @@ namespace Reports.Services
         {
             var user = await _repos.Get<User>().FirstOrDefaultAsync(e => e.Id == userId);
 
-            var files = _repos.Get<File>().Where(e => e.UserId == user.Id).ToList();
+            if (user != null)
+            {
+                var files = _repos.Get<File>().Where(e => e.UserId == user.Id).ToList();
 
-            var reports = _repos.Get<Report>().Where(e => e.UserId == user.Id).ToList();
+                var reports = _repos.Get<Report>().Where(e => e.UserId == user.Id).ToList();
 
-            var entity = _mapper.Map<User>(user);
+                var entity = _mapper.Map<User>(user);
 
-            await _repos.SaveChangesAsync();
+                await _repos.SaveChangesAsync();
 
-            return entity;
+                return entity; 
+            }
+
+            return null;
         }
 
         public async Task<User> GetByLogin(string userLogin)
         {
             var user = await _repos.Get<User>().FirstOrDefaultAsync(e => e.Login == userLogin);
 
-            var files = _repos.Get<File>().Where(e => e.UserId == user.Id).ToList();
+            if (user != null)
+            {
+                var files = _repos.Get<File>().Where(e => e.UserId == user.Id).ToList();
 
-            var reports = _repos.Get<Report>().Where(e => e.UserId == user.Id).ToList();
+                var reports = _repos.Get<Report>().Where(e => e.UserId == user.Id).ToList();
 
-            var entity = _mapper.Map<User>(user);
-            
-            await _repos.SaveChangesAsync();
+                var entity = _mapper.Map<User>(user);
 
-            return entity;
+                await _repos.SaveChangesAsync();
+
+                return entity; 
+            }
+
+            return null;
         }
 
-        public async Task<CreationResponse> Create(User user)
+        public async Task<DefaultResponse> Create(User user)
         {
             var entity = _mapper.Map<User>(user);
 
-            var result = await _repos.Add(entity);
+            var task = _repos.Add(entity);
 
-            await _repos.SaveChangesAsync();
+            if (task.IsCompletedSuccessfully)
+            {
+                await _repos.SaveChangesAsync();
 
-            return new CreationResponse() { IsCreated = true, Result = result};
+                return new DefaultResponse()
+                {
+                    Status = "Success",
+                    Message = "User created successfully!"
+                }; 
+            }
+
+            return new DefaultResponse()
+            {
+                Status = "Error",
+                Message = "User not created!"
+            };
         }
 
-        public async Task Update(User user)
+        public async Task<DefaultResponse> Update(User user)
         {
             var entity = _mapper.Map<User>(user);
 
-            await _repos.Update(entity);
-            await _repos.SaveChangesAsync();
+            var task = _repos.Update(entity);
+
+            if (task.IsCompletedSuccessfully)
+            {
+                await _repos.SaveChangesAsync();
+
+                return new DefaultResponse()
+                {
+                    Status = "Success",
+                    Message = "User updated successfully!"
+                };
+            }
+
+            return new DatabaseResponse()
+            {
+                Status = "Error",
+                Message = "User not updated!"
+            };
         }
 
-        public async Task Delete(User user)
-        {
-            await _repos.Remove<User>(user);
-            await _repos.SaveChangesAsync();
-        }
-
-        public async Task<Response> Login(LoginModel loginModel)
+        public async Task<DefaultResponse> Login(LoginModel loginModel)
         {
             var user = await _userManager.FindByNameAsync(loginModel.Login);
             if (user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password))
@@ -114,24 +147,29 @@ namespace Reports.Services
                     signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                     );
 
-                return new Response
+                await _repos.SaveChangesAsync();
+
+                return new DefaultResponse
                 {
                     Status = "Success",
                     Message = "Token: " + new JwtSecurityTokenHandler().WriteToken(token)
                 };
             }
-            return new Response
+            return new DefaultResponse
             {
                 Status = "Error",
-                Message = "User not founded!"
+                Message = "User not found!"
             };
         }
 
-        public async Task<Response> Register(RegisterModel registerModel)
+        public async Task<DefaultResponse> Register(RegisterModel registerModel)
         {
             var userExists = await _userManager.FindByNameAsync(registerModel.Login);
             if (userExists != null)
-                return new Response { Status = "Error", Message = "User already exists!" };
+                return new DefaultResponse { 
+                    Status = "Error", 
+                    Message = "User already exists!" 
+                };
 
             ApplicationUser user = new ApplicationUser()
             {
@@ -142,7 +180,10 @@ namespace Reports.Services
 
             var result = await _userManager.CreateAsync(user, registerModel.Password);
             if (!result.Succeeded)
-                return new Response { Status = "Error", Message = "User creation failed! Please check user details and try again." };
+                return new DefaultResponse { 
+                    Status = "Error", 
+                    Message = "User creation failed! Please check user details and try again." 
+                };
 
             await Create(new User()
             {
@@ -151,7 +192,10 @@ namespace Reports.Services
                 Login = registerModel.Login
             });
 
-            return new Response { Status = "Success", Message = "User created successfully!" };
+            return new DefaultResponse { 
+                Status = "Success", 
+                Message = "User created successfully!" 
+            };
         }
     }
 }

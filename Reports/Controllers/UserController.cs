@@ -31,9 +31,13 @@ namespace Reports.Controllers
 
                 return Ok(response);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                return BadRequest(new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 
@@ -49,9 +53,13 @@ namespace Reports.Controllers
 
                 return Ok(response);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                return BadRequest(new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 
@@ -64,14 +72,23 @@ namespace Reports.Controllers
                 {
                     var user = await _userService.GetByLogin(userLogin);
 
-                    return Ok(user); 
+                    if (user != null)
+                    {
+                        return Ok(user); 
+                    }
+
+                    return BadRequest("User not found!");
                 }
 
-                return BadRequest();
+                return BadRequest("Access is denied!");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                return BadRequest(new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 
@@ -82,36 +99,20 @@ namespace Reports.Controllers
             {
                 if (GetCurrentUserName() == user.Login)
                 {
-                    await _userService.Update(user);
+                    var response = await _userService.Update(user);
 
-                    return Ok(); 
+                    return Ok(response); 
                 }
 
-                return BadRequest();
+                return BadRequest("Access is denied!");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
-            }
-        }
-
-        [HttpDelete]
-        public async Task<IActionResult> Delete(User user)
-        {
-            try
-            {
-                if (GetCurrentUserName() == user.Login)
+                return BadRequest(new DefaultResponse()
                 {
-                    await _userService.Delete(user);
-
-                    return Ok(); 
-                }
-
-                return BadRequest();
-            }
-            catch (Exception)
-            {
-                throw;
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 
