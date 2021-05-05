@@ -2,7 +2,10 @@ import React from 'react';
 import Header from './Header';
 import Footer from './Footer';
 import Lobby from './Lobby';
+import { Route, Switch, useHistory } from 'react-router';
 import ProtectedRoute from './ProtectedRoute';
+import SignInForm from './SignInForm';
+import SignUpForm from './SignUpForm';
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
 
 function App() {
