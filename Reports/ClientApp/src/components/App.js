@@ -1,13 +1,15 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react';
+import Header from './Header';
+import Footer from './Footer';
+import { CurrentUserContext } from '../contexts/CurrentUserContext';
 
 function App() {
   return (
-    <>
-    <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+    <CurrentUserContext.Provider value={currentUser}>
+      <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
 
-    <Footer />
-    </>
+      <Footer />
+    </CurrentUserContext.Provider>
   );
 }
 
