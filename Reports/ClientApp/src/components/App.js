@@ -7,10 +7,11 @@ import ProtectedRoute from './ProtectedRoute';
 import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
+import { api } from '../utils/Api';
 
 function App() {
   const [currentUser, setCurrentUser] = React.useState({});
-  const [isLoggedIn, setIsLoggedIn] = React.useState(true);
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const history = useHistory();
 
@@ -42,26 +43,28 @@ function App() {
   }
 
   return (
-    <CurrentUserContext.Provider value={currentUser}>
-      <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
+    <div className="page">
+      <CurrentUserContext.Provider value={currentUser}>
+        <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
 
-      <Switch>
-          <Route exact path="/signin">
-            <Lobby>
-              <SignInForm onSubmit={handleSignIn} />
-            </Lobby>
-          </Route>
-          <Route exact path="/signup">
-            <Lobby>
-              <SignUpForm onSubmit={handleSignUp} />
-            </Lobby>
-          </Route>
-          <ProtectedRoute component={Main} path="/" isLoggedIn={isLoggedIn}>
-          </ProtectedRoute>
-        </Switch>
+        <Switch>
+            <Route exact path="/signin">
+              <Lobby>
+                <SignInForm onSubmit={handleSignIn} />
+              </Lobby>
+            </Route>
+            <Route exact path="/signup">
+              <Lobby>
+                <SignUpForm onSubmit={handleSignUp} />
+              </Lobby>
+            </Route>
+            <ProtectedRoute path="/" isLoggedIn={isLoggedIn}>
+            </ProtectedRoute>
+          </Switch>
 
-      <Footer />
-    </CurrentUserContext.Provider>
+        <Footer />
+      </CurrentUserContext.Provider>
+    </div>
   );
 }
 
