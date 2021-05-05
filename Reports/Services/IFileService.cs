@@ -9,10 +9,10 @@ namespace Reports.Services
     {
         Task<File> GetById(int fileId);
 
-        Task<CreationResponse> Create(File file);
-        Task<Response> UploadFile(string userLogin, IFormFile upload);
+        Task<DefaultResponse> Create(File file);
+        Task<DefaultResponse> UploadFile(string userLogin, IFormFile upload);
 
-        Task Update(File file);
-        Task Delete(int fileId);
+        Task<DefaultResponse> Update(File file);
+        Task<DefaultResponse> Remove(int fileId);
     }
 }

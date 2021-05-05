@@ -27,19 +27,28 @@ namespace Reports.Controllers
             try
             {
                 var file = await _fileService.GetById(fileId);
-                var user = await _userService.GetById(file.UserId);
 
-                if (GetCurrentUserName() == user.Login)
+                if (file != null)
                 {
-                    return Ok(file); 
+                    var user = await _userService.GetById(file.UserId);
+
+                    if (GetCurrentUserName() == user.Login)
+                    {
+                        return Ok(file);
+                    }
+
+                    return BadRequest("Access is denied!");
                 }
 
-                return BadRequest();
+                return BadRequest("The file not found!");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                return BadRequest(new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 
@@ -52,17 +61,20 @@ namespace Reports.Controllers
 
                 if (GetCurrentUserName() == user.Login)
                 {
-                    var fileId = await _fileService.Create(file);
+                    var response = await _fileService.Create(file);
 
-                    return Ok(fileId); 
+                    return Ok(response); 
                 }
 
-                return BadRequest();
+                return BadRequest("Access is denied!");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                return BadRequest(new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 
@@ -74,17 +86,20 @@ namespace Reports.Controllers
             {
                 if (GetCurrentUserName() == userLogin && upload != null)
                 {
-                    var fileId = await _fileService.UploadFile(userLogin, upload);
+                    var response = await _fileService.UploadFile(userLogin, upload);
 
-                    return Ok(fileId); 
+                    return Ok(response); 
                 }
 
-                return BadRequest();
+                return BadRequest("Access is denied!");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                return BadRequest(new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 
@@ -97,17 +112,20 @@ namespace Reports.Controllers
 
                 if (GetCurrentUserName() == user.Login)
                 {
-                    await _fileService.Update(file);
+                    var response = await _fileService.Update(file);
 
-                    return Ok(); 
+                    return Ok(response); 
                 }
 
-                return BadRequest();
+                return BadRequest("Access is denied!");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                return BadRequest(new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 
@@ -121,17 +139,20 @@ namespace Reports.Controllers
 
                 if (GetCurrentUserName() == user.Login)
                 {
-                    await _fileService.Delete(fileId);
+                    var response = await _fileService.Remove(fileId);
 
-                    return Ok(); 
+                    return Ok(response); 
                 }
 
-                return BadRequest();
+                return BadRequest("Access is denied!");
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                return BadRequest(new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "Message:  " + ex.Message
+                });
             }
         }
 

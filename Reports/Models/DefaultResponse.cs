@@ -1,6 +1,6 @@
 ﻿namespace Reports.Models
 {
-    public class Response
+    public class DefaultResponse
     {
         public string Status { get; set; }
         public string Message { get; set; }

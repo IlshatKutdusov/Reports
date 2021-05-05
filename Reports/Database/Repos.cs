@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Reports.Entities;
+using Reports.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,10 +28,9 @@ namespace Reports.Database
             return _context.Set<T>().AsQueryable();
         }
 
-        public async Task<int> Add<T>(T newEntity) where T : class, IBaseEntity
+        public async Task Add<T>(T newEntity) where T : class, IBaseEntity
         {
-            var entity = await _context.Set<T>().AddAsync(newEntity);
-            return entity.Entity.Id;
+            await _context.Set<T>().AddAsync(newEntity);
         }
 
         public async Task AddRange<T>(IEnumerable<T> newEntities) where T : class, IBaseEntity
@@ -38,21 +38,17 @@ namespace Reports.Database
             await _context.Set<T>().AddRangeAsync(newEntities);
         }
 
-        public async Task Update<T>(T entity) where T : class, IBaseEntity
-        {
-            await Task.Run(() => _context.Set<T>().Update(entity));
-        }
-
-        public async Task UpdateRange<T>(IEnumerable<T> entities) where T : class, IBaseEntity
-        {
-            await Task.Run(() => _context.Set<T>().UpdateRange(entities));
-        }
-
         public async Task Delete<T>(int id) where T : class, IBaseEntity
         {
             var activeEntity = await _context.Set<T>().FirstOrDefaultAsync(x => x.Id == id);
             activeEntity.isActive = false;
             await Task.Run(() => _context.Update(activeEntity));
+        }
+
+        public async Task Remove<T>(int id) where T : class, IBaseEntity
+        {
+            var entity = await _context.Set<T>().FirstOrDefaultAsync(x => x.Id == id);
+            await Task.Run(() => _context.Set<T>().Remove(entity));
         }
 
         public async Task Remove<T>(T entity) where T : class, IBaseEntity
@@ -65,9 +61,14 @@ namespace Reports.Database
             await Task.Run(() => _context.Set<T>().RemoveRange(entities));
         }
 
-        public async Task<int> SaveChangesAsync()
+        public async Task Update<T>(T entity) where T : class, IBaseEntity
         {
-            return await _context.SaveChangesAsync();
+            await Task.Run(() => _context.Set<T>().Update(entity));
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
         }
     }
 }

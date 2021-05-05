@@ -8,10 +8,10 @@ namespace Reports.Services
     {
         Task<Report> GetById(int reportId);
 
-        Task<CreationResponse> Create(Report report);
-        Task<CreationResponse> CreateReportFromFile(File file, string format);
+        Task<DefaultResponse> Create(Report report);
+        Task<DefaultResponse> CreateReportFromFile(File file, string format);
 
-        Task Update(Report report);
-        Task Delete(int reportId);
+        Task<DefaultResponse> Update(Report report);
+        Task<DefaultResponse> Remove(int reportId);
     }
 }
