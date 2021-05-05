@@ -364,3 +364,6 @@ FodyWeavers.xsd
 /Reports/Files
 /Reports/Reports
 /Reports/SourceData
+
+# Find all css files and write them to index.css
+imports.sh
