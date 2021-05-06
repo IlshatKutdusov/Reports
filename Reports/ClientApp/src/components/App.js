@@ -1,11 +1,12 @@
 import React from 'react';
+import { Route, Switch, useHistory } from 'react-router';
 import Header from './Header';
 import Footer from './Footer';
 import Lobby from './Lobby';
-import { Route, Switch, useHistory } from 'react-router';
 import ProtectedRoute from './ProtectedRoute';
 import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
+import Main from './Main';
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
 import { api } from '../utils/Api';
 
@@ -58,7 +59,7 @@ function App() {
                 <SignUpForm onSubmit={handleSignUp} />
               </Lobby>
             </Route>
-            <ProtectedRoute path="/" isLoggedIn={isLoggedIn}>
+          <ProtectedRoute component={Main} path="/" isLoggedIn={isLoggedIn}>
             </ProtectedRoute>
           </Switch>
 

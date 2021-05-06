@@ -5,8 +5,8 @@ class Api {
   }
 
   authenticate(authData) {
-    return fetch(`${this._baseUrl}/User/login`, {
-      method: 'PUT',
+    return fetch(`${this._baseUrl}/User/Login`, {
+      method: 'POST',
       headers: this._headers,
       body: JSON.stringify({
         login: authData.login,
@@ -18,7 +18,7 @@ class Api {
 
   register(regData) {
     return fetch(`${this._baseUrl}/User/Register`, {
-      method: 'PUT',
+      method: 'POST',
       headers: this._headers,
       body: JSON.stringify({
         email: regData.email,
