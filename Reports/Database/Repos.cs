@@ -38,19 +38,6 @@ namespace Reports.Database
             await _context.Set<T>().AddRangeAsync(newEntities);
         }
 
-        public async Task Delete<T>(int id) where T : class, IBaseEntity
-        {
-            var activeEntity = await _context.Set<T>().FirstOrDefaultAsync(x => x.Id == id);
-            activeEntity.isActive = false;
-            await Task.Run(() => _context.Update(activeEntity));
-        }
-
-        public async Task Remove<T>(int id) where T : class, IBaseEntity
-        {
-            var entity = await _context.Set<T>().FirstOrDefaultAsync(x => x.Id == id);
-            await Task.Run(() => _context.Set<T>().Remove(entity));
-        }
-
         public async Task Remove<T>(T entity) where T : class, IBaseEntity
         {
             await Task.Run(() => _context.Set<T>().Remove(entity));
