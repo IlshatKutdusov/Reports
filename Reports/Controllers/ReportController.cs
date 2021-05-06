@@ -69,9 +69,9 @@ namespace Reports.Controllers
 
                 var user = await _userService.GetById(report.UserId);
 
-                if (GetCurrentUserName() == user.Login)
+                if (GetCurrentUserName() == user?.Login && user != null)
                 {
-                    var response = await _reportService.Create(file, report);
+                    var response = await _reportService.Create(user, file, report);
 
                     return Ok(response);
                 }

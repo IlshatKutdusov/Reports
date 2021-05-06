@@ -8,7 +8,7 @@ namespace Reports.Services
     {
         Task<Report> GetById(int reportId);
 
-        Task<DefaultResponse> Create(File file, Report report);
+        Task<DefaultResponse> Create(User user, File file, Report report);
         Task<DefaultResponse> Generate(int fileId, string format);
 
         Task<DefaultResponse> Update(Report report);

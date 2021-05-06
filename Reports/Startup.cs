@@ -10,10 +10,10 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Reports.Models;
 using Reports.Database;
-using Reports.Entities;
 using Reports.Services;
 using System.Text;
 using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
+using Reports.Services.Helper;
 
 namespace Reports
 {
@@ -33,6 +33,7 @@ namespace Reports
             services.AddAutoMapper(typeof(Startup));
 
             services.AddScoped<IRepos, Repos>();
+            services.AddTransient<IReportBuilder, ReportBuilder>();
             services.AddTransient<IFileService, FileService>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IReportService, ReportService>();
