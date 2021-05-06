@@ -43,7 +43,7 @@ function App() {
       .finally(() => setIsLoading(false));
   }
 
-  return (
+  return (isLoading ? <span className="loading">Загрузка...</span> : 
     <div className="page">
       <CurrentUserContext.Provider value={currentUser}>
         <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
