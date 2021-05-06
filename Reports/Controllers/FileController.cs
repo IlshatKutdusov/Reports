@@ -135,6 +135,14 @@ namespace Reports.Controllers
             try
             {
                 var file = await _fileService.GetById(fileId);
+
+                if (file == null)
+                    return BadRequest(new DefaultResponse()
+                    {
+                        Status = "Error",
+                        Message = "The file not found!"
+                    });
+
                 var user = await _userService.GetById(file.UserId);
 
                 if (GetCurrentUserName() == user.Login)

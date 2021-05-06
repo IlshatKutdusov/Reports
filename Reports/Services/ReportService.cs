@@ -24,6 +24,7 @@ namespace Reports.Services
             _repos = repos;
             _fileService = fileService;
         }
+
         public async Task<Report> GetById(int reportId)
         {
             var report = await _repos.Get<Report>().FirstOrDefaultAsync(e => e.Id == reportId);
@@ -40,13 +41,13 @@ namespace Reports.Services
             return null;
         }
 
-        public async Task<DefaultResponse> Create(Report report)
+        public async Task<DefaultResponse> Create(Entities.File file, Report report)
         {
             var entity = _mapper.Map<Report>(report);
 
             await _repos.Add(entity);
 
-            var generateTask = await Generate(entity);
+            var generateTask = await Generate(file, entity);
 
             if (generateTask.Status == "Success")
             {
@@ -66,8 +67,17 @@ namespace Reports.Services
             };
         }
 
-        public async Task<DefaultResponse> CreateReportFromFile(Reports.Entities.File file, string format)
+        public async Task<DefaultResponse> Generate(int fileId, string format)
         {
+            var file = await _fileService.GetById(fileId);
+
+            if (file == null)
+                return new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "The file not found!"
+                };
+
             string _format = ".xlsx";
 
             if(format == "pdf")
@@ -82,7 +92,7 @@ namespace Reports.Services
                 Format = format
             };
 
-            var task = await Create(newReport);
+            var task = await Create(file, newReport);
 
             if (task.Status == "Success")
             {
@@ -129,10 +139,23 @@ namespace Reports.Services
 
         public async Task<DefaultResponse> Remove(int reportId)
         {
-            var task = _repos.Remove<Report>(reportId);
+            var report = await GetById(reportId);
+
+            if (report == null)
+                return new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "The report not found!"
+                };
+
+            var task = _repos.Remove<Report>(report);
+            task.Wait();
 
             if (task.IsCompletedSuccessfully)
             {
+                if (System.IO.File.Exists(report.Path + report.Name))
+                    System.IO.File.Delete(report.Path + report.Name);
+
                 await _repos.SaveChangesAsync();
 
                 return new DefaultResponse()
@@ -149,21 +172,10 @@ namespace Reports.Services
             };
         }
 
-        private async Task<DefaultResponse> Generate(Report report)
+        private async Task<DefaultResponse> Generate(Entities.File file, Report report)
         {
             if (!System.IO.Directory.Exists(ApplicationPath))
-            {
                 System.IO.Directory.CreateDirectory(ApplicationPath);
-            }
-
-            var file = await _fileService.GetById(report.FileId);
-
-            if (file == null)
-                return new DefaultResponse()
-                {
-                    Status = "Error",
-                    Message = "The file not created!"
-                };
 
             string fromFile = file.Path + file.Name;
 

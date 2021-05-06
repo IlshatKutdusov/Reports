@@ -46,6 +46,7 @@ namespace Reports.Services
             var entity = _mapper.Map<File>(file);
 
             var task = _repos.Add(entity);
+            task.Wait();
 
             if (task.IsCompletedSuccessfully)
             {
@@ -113,6 +114,7 @@ namespace Reports.Services
             var entity = _mapper.Map<File>(file);
 
             var task = _repos.Update(entity);
+            task.Wait();
 
             if (task.IsCompletedSuccessfully)
             {
@@ -134,10 +136,30 @@ namespace Reports.Services
 
         public async Task<DefaultResponse> Remove(int fileId)
         {
-            var task = _repos.Remove<File>(fileId);
+            var file = await GetById(fileId);
+
+            if (file == null)
+                return new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "The file not found!"
+                };
+
+            if (file.Reports != null)
+                foreach (var report in file.Reports)
+                {
+                    if (System.IO.File.Exists(report.Path + report.Name))
+                        System.IO.File.Delete(report.Path + report.Name);
+                }
+
+            var task = _repos.Remove<File>(file);
+            task.Wait();
 
             if (task.IsCompletedSuccessfully)
             {
+                if (System.IO.File.Exists(file.Path + file.Name))
+                    System.IO.File.Delete(file.Path + file.Name);
+
                 await _repos.SaveChangesAsync();
 
                 return new DefaultResponse()

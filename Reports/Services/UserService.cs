@@ -76,6 +76,7 @@ namespace Reports.Services
             var entity = _mapper.Map<User>(user);
 
             var task = _repos.Add(entity);
+            task.Wait();
 
             if (task.IsCompletedSuccessfully)
             {
@@ -100,6 +101,7 @@ namespace Reports.Services
             var entity = _mapper.Map<User>(user);
 
             var task = _repos.Update(entity);
+            task.Wait();
 
             if (task.IsCompletedSuccessfully)
             {
@@ -185,16 +187,24 @@ namespace Reports.Services
                     Message = "User creation failed! Please check user details and try again." 
                 };
 
-            await Create(new User()
+            var task = await Create(new User()
             {
                 Surname = registerModel.Surname,
                 Name = registerModel.Name,
                 Login = registerModel.Login
             });
 
-            return new DefaultResponse { 
-                Status = "Success", 
-                Message = "User created successfully!" 
+            if (task.Status == "Success")
+                return new DefaultResponse
+                {
+                    Status = "Success",
+                    Message = "User created successfully!"
+                };
+
+            return new DefaultResponse
+            {
+                Status = "Error",
+                Message = "User not created!"
             };
         }
     }
