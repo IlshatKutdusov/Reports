@@ -48,16 +48,14 @@ namespace Reports.Services
             var task = _repos.Add(entity);
             task.Wait();
 
-            if (task.IsCompletedSuccessfully)
-            {
-                await _repos.SaveChangesAsync();
+            await _repos.SaveChangesAsync();
 
+            if (task.IsCompletedSuccessfully)
                 return new DefaultResponse()
                 {
                     Status = "Success",
                     Message = "The file created successfully!"
                 }; 
-            }
 
             return new DefaultResponse()
             {
@@ -66,15 +64,16 @@ namespace Reports.Services
             };
         }
 
-        public async Task<DefaultResponse> UploadFile(string userLogin, IFormFile uploadedFile)
+        public async Task<UploadFileResponse> UploadFile(string userLogin, IFormFile uploadedFile)
         {
             var user = await _userService.GetByLogin(userLogin);
 
             if (user == null)
-                return new DefaultResponse()
+                return new UploadFileResponse()
                 {
                     Status = "Error",
-                    Message = "User not founded!"
+                    Message = "User not founded!",
+                    Done = false
                 };
 
             if (!System.IO.Directory.Exists(ApplicationPath))
@@ -84,28 +83,36 @@ namespace Reports.Services
 
             string path = ApplicationPath + uploadedFile.FileName;
 
-            File file = new File { UserId = user.Id, Name = uploadedFile.FileName, Path = ApplicationPath };
+            var file = new File 
+            { 
+                UserId = user.Id, 
+                Name = uploadedFile.FileName, 
+                Path = ApplicationPath 
+            };
 
-            var fileEntity = await Create(file);
+            var response = await Create(file);
 
-            if (fileEntity.Status == "Success")
+            if (response.Status == "Success")
             {
                 using (var fileStream = new System.IO.FileStream(path, System.IO.FileMode.Create))
                 {
                     await uploadedFile.CopyToAsync(fileStream);
                 }
 
-                return new DefaultResponse()
+                return new UploadFileResponse()
                 {
                     Status = "Success",
-                    Message = "The file uploaded successfully!"
+                    Message = "The file uploaded successfully!",
+                    Done = true,
+                    File = file
                 };
             }
 
-            return new DefaultResponse()
+            return new UploadFileResponse()
             {
                 Status = "Error",
-                Message = "The file already exists!"
+                Message = "The file already exists! " + response.Message,
+                Done = false
             };
         }
 
@@ -116,18 +123,16 @@ namespace Reports.Services
             var task = _repos.Update(entity);
             task.Wait();
 
-            if (task.IsCompletedSuccessfully)
-            {
-                await _repos.SaveChangesAsync();
+            await _repos.SaveChangesAsync();
 
+            if (task.IsCompletedSuccessfully)
                 return new DefaultResponse()
                 {
                     Status = "Success",
                     Message = "The file updated successfully!"
                 };
-            }
 
-            return new DatabaseResponse()
+            return new CreationResponse()
             {
                 Status = "Error",
                 Message = "The file not updated!"
@@ -155,12 +160,12 @@ namespace Reports.Services
             var task = _repos.Remove<File>(file);
             task.Wait();
 
+            await _repos.SaveChangesAsync();
+
             if (task.IsCompletedSuccessfully)
             {
                 if (System.IO.File.Exists(file.Path + file.Name))
                     System.IO.File.Delete(file.Path + file.Name);
-
-                await _repos.SaveChangesAsync();
 
                 return new DefaultResponse()
                 {
@@ -169,7 +174,7 @@ namespace Reports.Services
                 };
             }
 
-            return new DatabaseResponse()
+            return new CreationResponse()
             {
                 Status = "Error",
                 Message = "The file not removed!"

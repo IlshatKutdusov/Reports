@@ -78,16 +78,14 @@ namespace Reports.Services
             var task = _repos.Add(entity);
             task.Wait();
 
-            if (task.IsCompletedSuccessfully)
-            {
-                await _repos.SaveChangesAsync();
+            await _repos.SaveChangesAsync();
 
+            if (task.IsCompletedSuccessfully)
                 return new DefaultResponse()
                 {
                     Status = "Success",
                     Message = "User created successfully!"
                 }; 
-            }
 
             return new DefaultResponse()
             {
@@ -103,18 +101,16 @@ namespace Reports.Services
             var task = _repos.Update(entity);
             task.Wait();
 
-            if (task.IsCompletedSuccessfully)
-            {
-                await _repos.SaveChangesAsync();
+            await _repos.SaveChangesAsync();
 
+            if (task.IsCompletedSuccessfully)
                 return new DefaultResponse()
                 {
                     Status = "Success",
                     Message = "User updated successfully!"
                 };
-            }
 
-            return new DatabaseResponse()
+            return new CreationResponse()
             {
                 Status = "Error",
                 Message = "User not updated!"
@@ -124,6 +120,7 @@ namespace Reports.Services
         public async Task<DefaultResponse> Login(LoginModel loginModel)
         {
             var user = await _userManager.FindByNameAsync(loginModel.Login);
+
             if (user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password))
             {
                 var userRoles = await _userManager.GetRolesAsync(user);
@@ -167,13 +164,14 @@ namespace Reports.Services
         public async Task<DefaultResponse> Register(RegisterModel registerModel)
         {
             var userExists = await _userManager.FindByNameAsync(registerModel.Login);
+
             if (userExists != null)
                 return new DefaultResponse { 
                     Status = "Error", 
                     Message = "User already exists!" 
                 };
 
-            ApplicationUser user = new ApplicationUser()
+            var user = new ApplicationUser()
             {
                 Email = registerModel.Email,
                 SecurityStamp = Guid.NewGuid().ToString(),
@@ -181,6 +179,7 @@ namespace Reports.Services
             };
 
             var result = await _userManager.CreateAsync(user, registerModel.Password);
+
             if (!result.Succeeded)
                 return new DefaultResponse { 
                     Status = "Error", 
