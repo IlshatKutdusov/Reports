@@ -13,11 +13,13 @@ namespace Reports.Controllers
     {
         private readonly IReportService _reportService;
         private readonly IUserService _userService;
+        private readonly IFileService _fileService;
 
-        public ReportController(IReportService reportService, IUserService userService)
+        public ReportController(IReportService reportService, IUserService userService, IFileService fileService)
         {
             _reportService = reportService;
             _userService = userService;
+            _fileService = fileService;
         }
 
         [HttpGet]
@@ -56,11 +58,20 @@ namespace Reports.Controllers
         {
             try
             {
+                var file = await _fileService.GetById(report.FileId);
+
+                if (file == null)
+                    return BadRequest(new DefaultResponse()
+                    {
+                        Status = "Error",
+                        Message = "The file not found!"
+                    });
+
                 var user = await _userService.GetById(report.UserId);
 
                 if (GetCurrentUserName() == user.Login)
                 {
-                    var response = await _reportService.Create(report);
+                    var response = await _reportService.Create(file, report);
 
                     return Ok(response);
                 }
@@ -79,15 +90,24 @@ namespace Reports.Controllers
 
         [HttpPost]
         [Route("Generate")]
-        public async Task<IActionResult> CreateReportFromFile(File file, string format)
+        public async Task<IActionResult> Generate(int fileId, string format)
         {
             try
             {
+                var file = await _fileService.GetById(fileId);
+
+                if (file == null)
+                    return BadRequest(new DefaultResponse()
+                    {
+                        Status = "Error",
+                        Message = "The file not found!"
+                    });
+
                 var user = await _userService.GetById(file.UserId);
 
                 if (GetCurrentUserName() == user.Login)
                 {
-                    var response = await _reportService.CreateReportFromFile(file, format);
+                    var response = await _reportService.Generate(fileId, format);
 
                     return Ok(response);
                 }
@@ -136,6 +156,14 @@ namespace Reports.Controllers
             try
             {
                 var report = await _reportService.GetById(reportId);
+
+                if (report == null)
+                    return BadRequest(new DefaultResponse()
+                    {
+                        Status = "Error",
+                        Message = "The report not found!"
+                    });
+
                 var user = await _userService.GetById(report.UserId);
 
                 if (GetCurrentUserName() == user.Login)

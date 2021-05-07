@@ -16,9 +16,6 @@ namespace Reports.Database
         Task Add<T>(T newEntity) where T : class, IBaseEntity;
         Task AddRange<T>(IEnumerable<T> newEntities) where T : class, IBaseEntity;
 
-        Task Delete<T>(int entity) where T : class, IBaseEntity;
-
-        Task Remove<T>(int entity) where T : class, IBaseEntity;
         Task Remove<T>(T entity) where T : class, IBaseEntity;
         Task RemoveRange<T>(IEnumerable<T> entities) where T : class, IBaseEntity;
 
