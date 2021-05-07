@@ -64,15 +64,16 @@ namespace Reports.Services
             };
         }
 
-        public async Task<DefaultResponse> UploadFile(string userLogin, IFormFile uploadedFile)
+        public async Task<UploadFileResponse> UploadFile(string userLogin, IFormFile uploadedFile)
         {
             var user = await _userService.GetByLogin(userLogin);
 
             if (user == null)
-                return new DefaultResponse()
+                return new UploadFileResponse()
                 {
                     Status = "Error",
-                    Message = "User not founded!"
+                    Message = "User not founded!",
+                    Done = false
                 };
 
             if (!System.IO.Directory.Exists(ApplicationPath))
@@ -89,26 +90,29 @@ namespace Reports.Services
                 Path = ApplicationPath 
             };
 
-            var respinse = await Create(file);
+            var response = await Create(file);
 
-            if (respinse.Status == "Success")
+            if (response.Status == "Success")
             {
                 using (var fileStream = new System.IO.FileStream(path, System.IO.FileMode.Create))
                 {
                     await uploadedFile.CopyToAsync(fileStream);
                 }
 
-                return new DefaultResponse()
+                return new UploadFileResponse()
                 {
                     Status = "Success",
-                    Message = "The file uploaded successfully!"
+                    Message = "The file uploaded successfully!",
+                    Done = true,
+                    File = file
                 };
             }
 
-            return new DefaultResponse()
+            return new UploadFileResponse()
             {
                 Status = "Error",
-                Message = "The file already exists! " + respinse.Message
+                Message = "The file already exists! " + response.Message,
+                Done = false
             };
         }
 

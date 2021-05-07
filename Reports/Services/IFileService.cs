@@ -10,7 +10,7 @@ namespace Reports.Services
         Task<File> GetById(int fileId);
 
         Task<DefaultResponse> Create(File file);
-        Task<DefaultResponse> UploadFile(string userLogin, IFormFile upload);
+        Task<UploadFileResponse> UploadFile(string userLogin, IFormFile upload);
 
         Task<DefaultResponse> Update(File file);
         Task<DefaultResponse> Remove(int fileId);
