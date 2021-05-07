@@ -1,6 +1,6 @@
 ﻿namespace Reports.Models
 {
-    public class DatabaseResponse : DefaultResponse
+    public class CreationResponse : DefaultResponse
     {
         public bool Done { get; set; }
 

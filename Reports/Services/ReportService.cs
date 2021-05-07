@@ -55,16 +55,17 @@ namespace Reports.Services
 
             var generateTask = await Generate(user, file, entity);
 
-            if (generateTask.Status == "Success")
-            {
-                await _repos.SaveChangesAsync();
+            await _repos.SaveChangesAsync();
 
+            if (generateTask.Status == "Success")
                 return new DefaultResponse()
                 {
                     Status = "Success",
                     Message = "The report created successfully!"
                 };
-            }
+
+            await _repos.Remove(entity);
+            await _repos.SaveChangesAsync();
 
             return new DefaultResponse()
             {
@@ -79,16 +80,14 @@ namespace Reports.Services
 
             var task = _repos.Update(entity);
 
-            if (task.IsCompletedSuccessfully)
-            {
-                await _repos.SaveChangesAsync();
+            await _repos.SaveChangesAsync();
 
+            if (task.IsCompletedSuccessfully)
                 return new DefaultResponse()
                 {
                     Status = "Success",
                     Message = "The report updated successfully!"
                 };
-            }
 
             return new DefaultResponse()
             {
@@ -111,12 +110,12 @@ namespace Reports.Services
             var task = _repos.Remove<Report>(report);
             task.Wait();
 
+            await _repos.SaveChangesAsync();
+
             if (task.IsCompletedSuccessfully)
             {
                 if (System.IO.File.Exists(report.Path + report.Name))
                     System.IO.File.Delete(report.Path + report.Name);
-
-                await _repos.SaveChangesAsync();
 
                 return new DefaultResponse()
                 {
@@ -170,9 +169,6 @@ namespace Reports.Services
 
             if (task.Status == "Success")
             {
-
-                await _repos.SaveChangesAsync();
-
                 return new DefaultResponse()
                 {
                     Status = "Success",
@@ -201,45 +197,13 @@ namespace Reports.Services
                     Message = "The file not uploaded!"
                 };
 
+            var response = new DefaultResponse();
 
             if (report.Format == "excel")
             {
-                /*var format = new ExcelTextFormat();
-                format.Delimiter = ';';
-                format.EOL = "\r";
+                response = await _reportBuilder.DefaultSaveAsExcel(user, file, report);
 
-                using (ExcelPackage package = new ExcelPackage(new System.IO.FileInfo(report.Path + report.Name)))
-                {
-                    ExcelWorksheet excelWorksheet = package.Workbook.Worksheets.Add("Report");
-                    excelWorksheet.Cells[3, 3].Value = "Report:";
-                    excelWorksheet.Cells[3, 4].Value = report.Name;
-                    excelWorksheet.Cells[4, 3].Value = "From file:";
-                    excelWorksheet.Cells[4, 4].Value = file.Name;
-                    excelWorksheet.Cells[6, 3].Value = "Owner";
-                    excelWorksheet.Cells[7, 3].Value = "Surname:";
-                    excelWorksheet.Cells[7, 4].Value = user.Surname;
-                    excelWorksheet.Cells[8, 3].Value = "Name:";
-                    excelWorksheet.Cells[8, 4].Value = user.Name;
-                    excelWorksheet.Cells[10, 3].Value = "Source data:";
-                    excelWorksheet.Cells[11, 3].LoadFromText(new System.IO.FileInfo(fromFile), format, OfficeOpenXml.Table.TableStyles.Medium1, true);
-                    try
-                    {
-                        package.Save();
-                    }
-                    catch (System.Exception)
-                    {
-                        return new DefaultResponse()
-                        { 
-                            Status = "Error",
-                            Message = "The report not saved!"
-                        };
-                    }
-                }*/
-
-                var task = _reportBuilder.SaveAsExcel(user, file, report);
-                task.Wait();
-
-                if (task.IsCompletedSuccessfully)
+                if (response.Status == "Success")
                 {
                     return new DefaultResponse()
                     {
@@ -251,20 +215,14 @@ namespace Reports.Services
 
             if (report.Format == "pdf")
             {
-                /*using (Workbook workbook = new Workbook(file.Path + file.Name))
-                {
-                    workbook.Save(report.Path + report.Name, SaveFormat.Pdf);
-                }*/
+                response = await _reportBuilder.DefaultSaveAsPdf(user, file, report);
 
-                var task = _reportBuilder.SaveAsPdf(user, file, report);
-                task.Wait();
-
-                if (task.IsCompletedSuccessfully)
+                if (response.Status == "Success")
                 {
                     return new DefaultResponse()
                     {
                         Status = "Success",
-                        Message = "The report (.pdf) generated successfully!"
+                        Message = "The report generated successfully! (PDF)"
                     }; 
                 }
             }
@@ -272,7 +230,7 @@ namespace Reports.Services
             return new DefaultResponse()
             {
                 Status = "Error",
-                Message = "The report not generated!"
+                Message = "The report not generated! " + response.Message
             };
         }
     }
