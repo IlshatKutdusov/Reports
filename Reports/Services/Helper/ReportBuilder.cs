@@ -1,5 +1,4 @@
 ﻿using ClosedXML.Excel;
-using iTextSharp;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using Reports.Models;
@@ -87,7 +86,82 @@ namespace Reports.Services.Helper
 
             using (var woekBook = new XLWorkbook())
             {
-                woekBook.Worksheets.Add(reportData);
+                var worksheet = woekBook.Worksheets.Add("Report");
+
+                worksheet.Cell(3, 5).Value = "Auto-Generated Report";
+                worksheet.Cell(3, 5).Style.Font.Bold = true;
+                worksheet.Cell(3, 5).Style.Font.FontSize = 16;
+                worksheet.Cell(3, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                worksheet.Cell(5, 4).Value = "Report";
+                worksheet.Cell(5, 4).Style.Font.Bold = true;
+                worksheet.Cell(5, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                worksheet.Cell(6, 4).Value = "Name:";
+                worksheet.Cell(6, 4).Style.Font.Bold = true;
+                worksheet.Cell(6, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+                worksheet.Cell(6, 5).Value = report.Name;
+                worksheet.Cell(6, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                worksheet.Cell(7, 4).Value = "From file:";
+                worksheet.Cell(7, 4).Style.Font.Bold = true;
+                worksheet.Cell(7, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+                worksheet.Cell(7, 5).Value = file.Name;
+                worksheet.Cell(7, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                worksheet.Cell(8, 4).Value = "Created:";
+                worksheet.Cell(8, 4).Style.Font.Bold = true;
+                worksheet.Cell(8, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+                worksheet.Cell(8, 5).Value = report.DateCreated;
+                worksheet.Cell(8, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                worksheet.Cell(9, 4).Value = "Owner";
+                worksheet.Cell(9, 4).Style.Font.Bold = true;
+                worksheet.Cell(9, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                worksheet.Cell(10, 4).Value = "Surname:";
+                worksheet.Cell(10, 4).Style.Font.Bold = true;
+                worksheet.Cell(10, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+                worksheet.Cell(10, 5).Value = user.Surname;
+                worksheet.Cell(10, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                worksheet.Cell(11, 4).Value = "Name:";
+                worksheet.Cell(11, 4).Style.Font.Bold = true;
+                worksheet.Cell(11, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Right;
+
+                worksheet.Cell(11, 5).Value = user.Name;
+                worksheet.Cell(11, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+
+                worksheet.Cell(13, 3).Value = reportData.Rows[0][0];
+                worksheet.Cell(13, 3).Style.Font.Bold = true;
+                worksheet.Cell(13, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                worksheet.Cell(13, 4).Value = reportData.Rows[0][1];
+                worksheet.Cell(13, 4).Style.Font.Bold = true;
+                worksheet.Cell(13, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                worksheet.Cell(13, 5).Value = reportData.Rows[0][2];
+                worksheet.Cell(13, 5).Style.Font.Bold = true;
+                worksheet.Cell(13, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                worksheet.Cell(13, 6).Value = reportData.Rows[0][3];
+                worksheet.Cell(13, 6).Style.Font.Bold = true;
+                worksheet.Cell(13, 6).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                worksheet.Cell(13, 7).Value = reportData.Rows[0][4];
+                worksheet.Cell(13, 7).Style.Font.Bold = true;
+                worksheet.Cell(13, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+                reportData.Rows.Remove(reportData.Rows[0]);
+
+                worksheet.Cell(14, 3).Value = reportData.Rows;
+
+                worksheet.Columns().AdjustToContents();
+
                 woekBook.SaveAs(report.Path + report.Name);
             }
 

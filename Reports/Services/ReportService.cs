@@ -133,53 +133,73 @@ namespace Reports.Services
 
         public async Task<DefaultResponse> Generate(int fileId, string format)
         {
-            var file = await _fileService.GetById(fileId);
+            if (format == "xlsx" || format == "pdf")
+            {
+                var file = await _fileService.GetById(fileId);
 
-            if (file == null)
+                if (file == null)
+                    return new DefaultResponse()
+                    {
+                        Status = "Error",
+                        Message = "The file not found!"
+                    };
+
+                string _format = ".xlsx";
+
+                if (format == "pdf")
+                    _format = ".pdf";
+
+                if (file.Reports != null)
+                {
+                    foreach (var report in file.Reports)
+                        if (report.Format == _format)
+                            return new DefaultResponse()
+                            {
+                                Status = "Error",
+                                Message = "A report of this format has already been created!"
+                            }; 
+                }
+
+                var newReport = new Report()
+                {
+                    UserId = file.UserId,
+                    FileId = file.Id,
+                    Name = "Report_" + file.Name.Remove(file.Name.Length - 4, 4) + _format,
+                    Path = ApplicationPath,
+                    Format = _format
+                };
+
+                var user = await _userService.GetById(file.UserId);
+
+                if (user == null)
+                    return new DefaultResponse()
+                    {
+                        Status = "Error",
+                        Message = "User not found!"
+                    };
+
+                var task = await Create(user, file, newReport);
+
+                if (task.Status == "Success")
+                {
+                    return new DefaultResponse()
+                    {
+                        Status = "Success",
+                        Message = "The report created successfully!"
+                    };
+                }
+
                 return new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "The file not found!"
-                };
-
-            string _format = ".xlsx";
-
-            if (format == "pdf")
-                _format = ".pdf";
-
-            var newReport = new Report()
-            {
-                UserId = file.UserId,
-                FileId = file.Id,
-                Name = "Report_" + file.Name.Remove(file.Name.Length - 4, 4) + _format,
-                Path = ApplicationPath,
-                Format = format
-            };
-
-            var user = await _userService.GetById(file.UserId);
-
-            if (user == null)
-                return new DefaultResponse()
-                {
-                    Status = "Error",
-                    Message = "User not found!"
-                };
-
-            var task = await Create(user, file, newReport);
-
-            if (task.Status == "Success")
-            {
-                return new DefaultResponse()
-                {
-                    Status = "Success",
-                    Message = "The report created successfully!"
+                    Message = "The report not created! " + task.Message
                 };
             }
 
             return new DefaultResponse()
             {
                 Status = "Error",
-                Message = "The report not created! " + task.Message
+                Message = "This format is not supported! (only \".xlsx\" or \".pdf\")"
             };
         }
 
@@ -199,7 +219,7 @@ namespace Reports.Services
 
             var response = new DefaultResponse();
 
-            if (report.Format == "excel")
+            if (report.Format == ".xlsx")
             {
                 response = await _reportBuilder.DefaultSaveAsExcel(user, file, report);
 
@@ -213,7 +233,7 @@ namespace Reports.Services
                 }
             }
 
-            if (report.Format == "pdf")
+            if (report.Format == ".pdf")
             {
                 response = await _reportBuilder.DefaultSaveAsPdf(user, file, report);
 
