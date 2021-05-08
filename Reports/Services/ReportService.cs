@@ -3,11 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Reports.Database;
 using Reports.Entities;
 using AutoMapper;
-using OfficeOpenXml;
 using Reports.Models;
-using Aspose.Cells;
-using System.Data;
-using System.Text.RegularExpressions;
 using Reports.Services.Helper;
 
 namespace Reports.Services
@@ -31,38 +27,211 @@ namespace Reports.Services
             _reportBuilder = reportBuilder;
         }
 
-        public async Task<Report> GetById(int reportId)
+        public async Task<ReportResponse> GetById(string requestUserLogin, int reportId)
         {
             var report = await _repos.Get<Report>().FirstOrDefaultAsync(e => e.Id == reportId);
 
-            if (report != null)
-            {
-                var entity = _mapper.Map<Report>(report);
+            if (report == null)
+                return new ReportResponse()
+                {
+                    Status = "Error",
+                    Message = "The report not found!",
+                    Done = false
+                };
 
-                await _repos.SaveChangesAsync();
+            var userResponse = await _userService.GetById(requestUserLogin, report.UserId);
 
-                return entity; 
-            }
+            if (!userResponse.Done)
+                return new ReportResponse()
+                {
+                    Status = "Error",
+                    Message = userResponse.Message,
+                    Done = false
+                };
 
-            return null;
-        }
+            var fileResponse = await _fileService.GetById(requestUserLogin, report.FileId);
 
-        public async Task<DefaultResponse> Create(User user, File file, Report report)
-        {
+            if (!fileResponse.Done)
+                return new ReportResponse()
+                {
+                    Status = "Error",
+                    Message = userResponse.Message,
+                    Done = false
+                };
+
             var entity = _mapper.Map<Report>(report);
 
-            await _repos.Add(entity);
+            return new ReportResponse()
+            {
+                Status = "Success",
+                Message = "The report found successfully!",
+                Done = true,
+                Report = entity
+            };
+        }
 
-            var generateTask = await Generate(user, file, entity);
+        public async Task<ReportResponse> GenerateFromFile(string requestUserLogin, int fileId, string format)
+        {
+            var fileResponse = await _fileService.GetById(requestUserLogin, fileId);
+
+            if (!fileResponse.Done)
+                return new ReportResponse()
+                {
+                    Status = "Error",
+                    Message = fileResponse.Message,
+                    Done = false
+                };
+
+            var userResponse = await _userService.GetById(requestUserLogin, fileResponse.File.UserId);
+
+            if (!(format == "xlsx" || format == "pdf"))
+                return new ReportResponse()
+                {
+                    Status = "Error",
+                    Message = "This format is not supported! (only .xlsx or .pdf)",
+                    Done = false
+                };
+
+            string _format = ".xlsx";
+
+            if (format == "pdf")
+                _format = ".pdf";
+
+            if (fileResponse.File.Reports != null)
+                foreach (var report in fileResponse.File.Reports)
+                    if (report.Format == _format)
+                        return new ReportResponse()
+                        {
+                            Status = "Error",
+                            Message = "A report of this format has already been created!",
+                            Done = false
+                        };
+
+            var newReport = new Report()
+            {
+                UserId = fileResponse.File.UserId,
+                FileId = fileResponse.File.Id,
+                Name = "Report_" + fileResponse.File.Name.Remove(fileResponse.File.Name.Length - 4, 4) + _format,
+                Path = ApplicationPath,
+                Format = _format
+            };
+
+            var creationTask = await Create(userResponse.User, fileResponse.File, newReport);
+
+            if (creationTask.Done)
+                return new ReportResponse()
+                {
+                    Status = "Success",
+                    Message = creationTask.Message,
+                    Done = true,
+                    Report = newReport
+                };
+
+            return new ReportResponse()
+            {
+                Status = "Error",
+                Message = "The report not created! " + creationTask.Message,
+                Done = false
+            };
+        }
+
+        public async Task<DefaultResponse> Update(string requestUserLogin, Report report)
+        {
+            var reportResponse = await GetById(requestUserLogin, report.Id);
+
+            if (!reportResponse.Done)
+                return new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = reportResponse.Message,
+                    Done = false
+                };
+
+            var entity = _mapper.Map<Report>(report);
+
+            var updatingTask = _repos.Update(entity);
 
             await _repos.SaveChangesAsync();
 
-            if (generateTask.Status == "Success")
+            if (updatingTask.IsCompletedSuccessfully)
                 return new DefaultResponse()
                 {
                     Status = "Success",
-                    Message = "The report created successfully!"
+                    Message = "The report updated successfully!",
+                    Done = true
                 };
+
+            return new DefaultResponse()
+            {
+                Status = "Error",
+                Message = "The report not updated!",
+                Done = false
+            };
+        }
+
+        public async Task<DefaultResponse> Remove(string requestUserLogin, int reportId)
+        {
+            var reportResponse = await GetById(requestUserLogin, reportId);
+
+            if (!reportResponse.Done)
+                return new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = reportResponse.Message,
+                    Done = false
+                };
+
+            var removingTask = _repos.Remove<Report>(reportResponse.Report);
+            removingTask.Wait();
+
+            await _repos.SaveChangesAsync();
+
+            if (!removingTask.IsCompletedSuccessfully)
+                return new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "The report not removed!",
+                    Done = false
+                };
+
+            if (System.IO.File.Exists(reportResponse.Report.Path + reportResponse.Report.Name))
+                System.IO.File.Delete(reportResponse.Report.Path + reportResponse.Report.Name);
+
+            return new DefaultResponse()
+            {
+                Status = "Success",
+                Message = "The report removed successfully!",
+                Done = true
+            };
+        }
+
+        private async Task<DefaultResponse> Create(User user, File file, Report report)
+        {
+            var entity = _mapper.Map<Report>(report);
+
+            var addingTask = _repos.Add(entity);
+
+            if (!addingTask.IsCompletedSuccessfully)
+                return new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = "The report not added!",
+                    Done = false
+                };
+
+            var generateTask = await Generate(user, file, entity);
+
+            if (generateTask.Done)
+            {
+                await _repos.SaveChangesAsync();
+
+                return new DefaultResponse()
+                {
+                    Status = "Success",
+                    Message = "The report created successfully!",
+                    Done = true
+                };
+            }
 
             await _repos.Remove(entity);
             await _repos.SaveChangesAsync();
@@ -70,136 +239,8 @@ namespace Reports.Services
             return new DefaultResponse()
             {
                 Status = "Error",
-                Message = "The report not generated! " + generateTask.Message
-            };
-        }
-
-        public async Task<DefaultResponse> Update(Report report)
-        {
-            var entity = _mapper.Map<Report>(report);
-
-            var task = _repos.Update(entity);
-
-            await _repos.SaveChangesAsync();
-
-            if (task.IsCompletedSuccessfully)
-                return new DefaultResponse()
-                {
-                    Status = "Success",
-                    Message = "The report updated successfully!"
-                };
-
-            return new DefaultResponse()
-            {
-                Status = "Error",
-                Message = "The report not updated!"
-            };
-        }
-
-        public async Task<DefaultResponse> Remove(int reportId)
-        {
-            var report = await GetById(reportId);
-
-            if (report == null)
-                return new DefaultResponse()
-                {
-                    Status = "Error",
-                    Message = "The report not found!"
-                };
-
-            var task = _repos.Remove<Report>(report);
-            task.Wait();
-
-            await _repos.SaveChangesAsync();
-
-            if (task.IsCompletedSuccessfully)
-            {
-                if (System.IO.File.Exists(report.Path + report.Name))
-                    System.IO.File.Delete(report.Path + report.Name);
-
-                return new DefaultResponse()
-                {
-                    Status = "Success",
-                    Message = "The report removed successfully!"
-                };
-            }
-
-            return new DefaultResponse()
-            {
-                Status = "Error",
-                Message = "The report not removed!"
-            };
-        }
-
-        public async Task<DefaultResponse> Generate(int fileId, string format)
-        {
-            if (format == "xlsx" || format == "pdf")
-            {
-                var file = await _fileService.GetById(fileId);
-
-                if (file == null)
-                    return new DefaultResponse()
-                    {
-                        Status = "Error",
-                        Message = "The file not found!"
-                    };
-
-                string _format = ".xlsx";
-
-                if (format == "pdf")
-                    _format = ".pdf";
-
-                if (file.Reports != null)
-                {
-                    foreach (var report in file.Reports)
-                        if (report.Format == _format)
-                            return new DefaultResponse()
-                            {
-                                Status = "Error",
-                                Message = "A report of this format has already been created!"
-                            }; 
-                }
-
-                var newReport = new Report()
-                {
-                    UserId = file.UserId,
-                    FileId = file.Id,
-                    Name = "Report_" + file.Name.Remove(file.Name.Length - 4, 4) + _format,
-                    Path = ApplicationPath,
-                    Format = _format
-                };
-
-                var user = await _userService.GetById(file.UserId);
-
-                if (user == null)
-                    return new DefaultResponse()
-                    {
-                        Status = "Error",
-                        Message = "User not found!"
-                    };
-
-                var task = await Create(user, file, newReport);
-
-                if (task.Status == "Success")
-                {
-                    return new DefaultResponse()
-                    {
-                        Status = "Success",
-                        Message = "The report created successfully!"
-                    };
-                }
-
-                return new DefaultResponse()
-                {
-                    Status = "Error",
-                    Message = "The report not created! " + task.Message
-                };
-            }
-
-            return new DefaultResponse()
-            {
-                Status = "Error",
-                Message = "This format is not supported! (only \".xlsx\" or \".pdf\")"
+                Message = generateTask.Message,
+                Done = false
             };
         }
 
@@ -214,43 +255,31 @@ namespace Reports.Services
                 return new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "The file not uploaded!"
+                    Message = "The file not uploaded!",
+                    Done = false
                 };
 
-            var response = new DefaultResponse();
+            var savingTask = new DefaultResponse();
 
             if (report.Format == ".xlsx")
-            {
-                response = await _reportBuilder.DefaultSaveAsExcel(user, file, report);
-
-                if (response.Status == "Success")
-                {
-                    return new DefaultResponse()
-                    {
-                        Status = "Success",
-                        Message = "The report (.xlsx) generated successfully!"
-                    }; 
-                }
-            }
+                savingTask = await _reportBuilder.DefaultSaveAsExcel(user, file, report);
 
             if (report.Format == ".pdf")
-            {
-                response = await _reportBuilder.DefaultSaveAsPdf(user, file, report);
+                savingTask = await _reportBuilder.DefaultSaveAsPdf(user, file, report);
 
-                if (response.Status == "Success")
+            if (savingTask.Done)
+                return new DefaultResponse()
                 {
-                    return new DefaultResponse()
-                    {
-                        Status = "Success",
-                        Message = "The report generated successfully! (PDF)"
-                    }; 
-                }
-            }
+                    Status = "Success",
+                    Message = "The report generated successfully! (" + report.Format + ")",
+                    Done = true
+                };
 
             return new DefaultResponse()
             {
                 Status = "Error",
-                Message = "The report not generated! " + response.Message
+                Message = "The report not generated! " + savingTask.Message,
+                Done = false
             };
         }
     }

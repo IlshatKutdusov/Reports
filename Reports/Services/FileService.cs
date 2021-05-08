@@ -23,83 +23,129 @@ namespace Reports.Services
             _repos = repos;
             _userService = userService;
         }
-        public async Task<File> GetById(int fileId)
+
+        public async Task<FileResponse> GetById(string requestUserLogin, int fileId)
         {
             var file = await _repos.Get<File>().FirstOrDefaultAsync(e => e.Id == fileId);
 
-            if (file != null)
-            {
-                var reports = _repos.Get<Report>().Where(e => e.FileId == file.Id).ToList();
+            if (file == null)
+                return new FileResponse()
+                {
+                    Status = "Error",
+                    Message = "The file not found!",
+                    Done = false
+                };
 
-                var entity = _mapper.Map<File>(file);
+            var userResponse = await _userService.GetById(requestUserLogin, file.UserId);
 
-                await _repos.SaveChangesAsync();
+            if (!userResponse.Done)
+                return new FileResponse()
+                {
+                    Status = "Error",
+                    Message = userResponse.Message,
+                    Done = false
+                };
 
-                return entity; 
-            }
+            var reports = _repos.Get<Report>().Where(e => e.FileId == file.Id).ToList();
 
-            return null;
-        }
-
-        public async Task<DefaultResponse> Create(File file)
-        {
             var entity = _mapper.Map<File>(file);
 
-            var task = _repos.Add(entity);
-            task.Wait();
+            return new FileResponse()
+            {
+                Status = "Success",
+                Message = "The file found successfully!",
+                Done = true,
+                File = entity
+            };
+        }
+
+        private async Task<DefaultResponse> Create(string requestUserLogin, File file)
+        {
+            var userResponse = await _userService.GetById(requestUserLogin, file.UserId);
+
+            if (!userResponse.Done)
+                return new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = userResponse.Message,
+                    Done = false
+                };
+
+            var entity = _mapper.Map<File>(file);
+
+            var addTask = _repos.Add(entity);
+            addTask.Wait();
 
             await _repos.SaveChangesAsync();
 
-            if (task.IsCompletedSuccessfully)
+            if (addTask.IsCompletedSuccessfully)
                 return new DefaultResponse()
                 {
                     Status = "Success",
-                    Message = "The file created successfully!"
+                    Message = "The file created successfully!",
+                    Done = true
                 }; 
 
             return new DefaultResponse()
             {
                 Status = "Error",
-                Message = "The file not created!"
+                Message = "The file not created!",
+                Done = false
             };
         }
 
-        public async Task<UploadFileResponse> UploadFile(string userLogin, IFormFile uploadedFile)
+        public async Task<FileResponse> UploadFile(string requestUserLogin, string userLogin, IFormFile uploadedFile)
         {
-            var user = await _userService.GetByLogin(userLogin);
+            string uploadFileName = uploadedFile.FileName.Substring(uploadedFile.FileName.Length - 4);
 
-            if (user == null)
-                return new UploadFileResponse()
+            if (uploadFileName != ".csv")
+                return new FileResponse()
                 {
                     Status = "Error",
-                    Message = "User not founded!",
+                    Message = "This format is not supported! (only .csv)",
+                    Done = false
+                };
+
+            var userResponse = await _userService.GetByLogin(requestUserLogin, userLogin);
+
+            if (!userResponse.Done)
+                return new FileResponse()
+                {
+                    Status = "Error",
+                    Message = userResponse.Message,
                     Done = false
                 };
 
             if (!System.IO.Directory.Exists(ApplicationPath))
-            {
                 System.IO.Directory.CreateDirectory(ApplicationPath);
-            }
 
-            string path = ApplicationPath + uploadedFile.FileName;
+            string path = ApplicationPath + userLogin + "_" + uploadedFile.FileName;
+
+            if (System.IO.File.Exists(path))
+                return new FileResponse()
+                {
+                    Status = "Error",
+                    Message = "The file already exists!",
+                    Done = false
+                };
 
             var file = new File 
             { 
-                UserId = user.Id, 
-                Name = uploadedFile.FileName, 
+                UserId = userResponse.User.Id, 
+                Name = requestUserLogin + "_" + uploadedFile.FileName, 
                 Path = ApplicationPath 
             };
 
-            var response = await Create(file);
+            var creationTask = await Create(requestUserLogin, file);
 
-            if (response.Status == "Success")
+            if (creationTask.Done)
             {
                 using (var fileStream = new System.IO.FileStream(path, System.IO.FileMode.Create))
                 {
                     await uploadedFile.CopyToAsync(fileStream);
                 }
 
-                return new UploadFileResponse()
+                return new FileResponse()
                 {
                     Status = "Success",
                     Message = "The file uploaded successfully!",
@@ -108,76 +154,92 @@ namespace Reports.Services
                 };
             }
 
-            return new UploadFileResponse()
+            return new FileResponse()
             {
                 Status = "Error",
-                Message = "The file already exists! " + response.Message,
+                Message = "The file already exists! " + creationTask.Message,
                 Done = false
             };
         }
 
-        public async Task<DefaultResponse> Update(File file)
+        public async Task<DefaultResponse> Update(string requestUserLogin, File file)
         {
-            var entity = _mapper.Map<File>(file);
+            var fileResponse = await GetById(requestUserLogin, file.UserId);
 
-            var task = _repos.Update(entity);
-            task.Wait();
-
-            await _repos.SaveChangesAsync();
-
-            if (task.IsCompletedSuccessfully)
-                return new DefaultResponse()
-                {
-                    Status = "Success",
-                    Message = "The file updated successfully!"
-                };
-
-            return new CreationResponse()
-            {
-                Status = "Error",
-                Message = "The file not updated!"
-            };
-        }
-
-        public async Task<DefaultResponse> Remove(int fileId)
-        {
-            var file = await GetById(fileId);
-
-            if (file == null)
+            if (!fileResponse.Done)
                 return new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "The file not found!"
+                    Message = fileResponse.Message,
+                    Done = false
                 };
 
-            if (file.Reports != null)
-                foreach (var report in file.Reports)
+
+            var entity = _mapper.Map<File>(file);
+
+            var updatingTask = _repos.Update(entity);
+            updatingTask.Wait();
+
+            await _repos.SaveChangesAsync();
+
+            if (updatingTask.IsCompletedSuccessfully)
+                return new DefaultResponse()
+                {
+                    Status = "Success",
+                    Message = "The file updated successfully!",
+                    Done = true
+                };
+
+            return new DefaultResponse()
+            {
+                Status = "Error",
+                Message = "The file not updated!",
+                Done = false
+            };
+        }
+
+        public async Task<DefaultResponse> Remove(string requestUserLogin, int fileId)
+        {
+            var fileResponse = await GetById(requestUserLogin, fileId);
+
+            if (!fileResponse.Done)
+                return new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = fileResponse.Message,
+                    Done = false
+                };
+
+            if (fileResponse.File.Reports != null)
+                foreach (var report in fileResponse.File.Reports)
                 {
                     if (System.IO.File.Exists(report.Path + report.Name))
                         System.IO.File.Delete(report.Path + report.Name);
                 }
 
-            var task = _repos.Remove<File>(file);
-            task.Wait();
+            var removingTask = _repos.Remove<File>(fileResponse.File);
+            removingTask.Wait();
 
             await _repos.SaveChangesAsync();
 
-            if (task.IsCompletedSuccessfully)
+            if (removingTask.IsCompletedSuccessfully)
             {
-                if (System.IO.File.Exists(file.Path + file.Name))
-                    System.IO.File.Delete(file.Path + file.Name);
+                if (System.IO.File.Exists(fileResponse.File.Path + fileResponse.File.Name))
+                    System.IO.File.Delete(fileResponse.File.Path + fileResponse.File.Name);
 
                 return new DefaultResponse()
                 {
                     Status = "Success",
-                    Message = "The file removed successfully!"
+                    Message = "The file removed successfully!",
+                    Done = true
                 };
             }
 
             return new CreationResponse()
             {
                 Status = "Error",
-                Message = "The file not removed!"
+                Message = "The file not removed!",
+                Done = false
             };
         }
     }
