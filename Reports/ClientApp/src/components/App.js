@@ -16,6 +16,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState('');
+  const [files, setFiles] = React.useState([]);
   const history = useHistory();
 
   function handleSignIn(authData) {
@@ -30,6 +31,8 @@ function App() {
             .then((response) => {
               setCurrentUser(response);
               setIsLoggedIn(true);
+              console.log(response);
+              setFiles(response.files);
               history.push('/');
             })
             .catch(err => console.log(err));
@@ -68,8 +71,7 @@ function App() {
                 <SignUpForm onSubmit={handleSignUp} />
               </Lobby>
             </Route>
-          <ProtectedRoute component={Main} path="/" isLoggedIn={isLoggedIn}>
-            </ProtectedRoute>
+          <ProtectedRoute component={Main} path="/" isLoggedIn={isLoggedIn} files={files} />
           </Switch>
 
         <Footer />

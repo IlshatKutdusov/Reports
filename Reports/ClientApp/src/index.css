@@ -3,6 +3,12 @@
 @import url(./blocks/content/__button/content__button.css);
 @import url(./blocks/content/__header/content__header.css);
 @import url(./blocks/content/__title/content__title.css);
+@import url(./blocks/file/file.css);
+@import url(./blocks/file/__info/file__info.css);
+@import url(./blocks/file/__name/file__name.css);
+@import url(./blocks/file/__remove-button/file__remove-button.css);
+@import url(./blocks/file/__report-button/file__report-button.css);
+@import url(./blocks/files/files.css);
 @import url(./blocks/footer/footer.css);
 @import url(./blocks/footer/__copyright/footer__copyright.css);
 @import url(./blocks/form/form.css);
