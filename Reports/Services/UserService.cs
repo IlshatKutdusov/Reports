@@ -31,47 +31,77 @@ namespace Reports.Services
             this._userManager = userManager;
         }
 
-        public async Task<User> GetById(int userId)
+        public async Task<UserResponse> GetById(string requestUserLogin, int userId)
         {
-            var user = await _repos.Get<User>().FirstOrDefaultAsync(e => e.Id == userId);
+            var user = await _repos.Get<User>().FirstOrDefaultAsync(e => e.Login == requestUserLogin);
 
-            if (user != null)
+            if (user == null)
+                return new UserResponse()
+                {
+                    Status = "Error",
+                    Message = "User not found!",
+                    Done = false
+                };
+
+            if (user.Id != userId)
+                return new UserResponse()
+                {
+                    Status = "Error",
+                    Message = "Access is denied!",
+                    Done = false
+                };
+
+            var files = _repos.Get<File>().Where(e => e.UserId == user.Id).ToList();
+
+            var reports = _repos.Get<Report>().Where(e => e.UserId == user.Id).ToList();
+
+            var entity = _mapper.Map<User>(user);
+
+            return new UserResponse()
             {
-                var files = _repos.Get<File>().Where(e => e.UserId == user.Id).ToList();
-
-                var reports = _repos.Get<Report>().Where(e => e.UserId == user.Id).ToList();
-
-                var entity = _mapper.Map<User>(user);
-
-                await _repos.SaveChangesAsync();
-
-                return entity; 
-            }
-
-            return null;
+                Status = "Success",
+                Message = "The file found successfully!",
+                Done = true,
+                User = entity
+            };
         }
 
-        public async Task<User> GetByLogin(string userLogin)
+        public async Task<UserResponse> GetByLogin(string requestUserLogin, string userLogin)
         {
-            var user = await _repos.Get<User>().FirstOrDefaultAsync(e => e.Login == userLogin);
+            var user = await _repos.Get<User>().FirstOrDefaultAsync(e => e.Login == requestUserLogin);
 
-            if (user != null)
+            if (user == null)
+                return new UserResponse()
+                {
+                    Status = "Error",
+                    Message = "User not found!",
+                    Done = false
+                };
+
+            if (user.Login != userLogin)
+                return new UserResponse()
+                {
+                    Status = "Error",
+                    Message = "Access is denied!",
+                    Done = false
+                };
+
+            var files = _repos.Get<File>().Where(e => e.UserId == user.Id).ToList();
+
+            var reports = _repos.Get<Report>().Where(e => e.UserId == user.Id).ToList();
+
+            var entity = _mapper.Map<User>(user);
+
+            return new UserResponse()
             {
-                var files = _repos.Get<File>().Where(e => e.UserId == user.Id).ToList();
-
-                var reports = _repos.Get<Report>().Where(e => e.UserId == user.Id).ToList();
-
-                var entity = _mapper.Map<User>(user);
-
-                await _repos.SaveChangesAsync();
-
-                return entity; 
-            }
-
-            return null;
+                Status = "Success",
+                Message = "User found successfully!",
+                Done = true,
+                User = entity
+            };
         }
 
-        public async Task<DefaultResponse> Create(User user)
+        private async Task<DefaultResponse> Create(User user)
         {
             var entity = _mapper.Map<User>(user);
 
@@ -84,18 +114,38 @@ namespace Reports.Services
                 return new DefaultResponse()
                 {
                     Status = "Success",
-                    Message = "User created successfully!"
+                    Message = "User created successfully!",
+                    Done = true
                 }; 
 
             return new DefaultResponse()
             {
                 Status = "Error",
-                Message = "User not created!"
+                Message = "User not created!",
+                Done = false
             };
         }
 
-        public async Task<DefaultResponse> Update(User user)
+        public async Task<DefaultResponse> Update(string requestUserLogin, User user)
         {
+            var requestUser = await _repos.Get<User>().FirstOrDefaultAsync(e => e.Login == requestUserLogin);
+
+            if (requestUser == null)
+                return new UserResponse()
+                {
+                    Status = "Error",
+                    Message = "User not found!",
+                    Done = false
+                };
+
+            if (requestUser.Login != user.Login)
+                return new UserResponse()
+                {
+                    Status = "Error",
+                    Message = "Access is denied!",
+                    Done = false
+                };
+
             var entity = _mapper.Map<User>(user);
 
             var task = _repos.Update(entity);
@@ -107,13 +157,15 @@ namespace Reports.Services
                 return new DefaultResponse()
                 {
                     Status = "Success",
-                    Message = "User updated successfully!"
+                    Message = "User updated successfully!",
+                    Done = true
                 };
 
-            return new CreationResponse()
+            return new DefaultResponse()
             {
                 Status = "Error",
-                Message = "User not updated!"
+                Message = "User not updated!",
+                Done = false
             };
         }
 
@@ -121,61 +173,62 @@ namespace Reports.Services
         {
             var user = await _userManager.FindByNameAsync(loginModel.Login);
 
-            if (user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password))
-            {
-                var userRoles = await _userManager.GetRolesAsync(user);
+            if (!(user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password)))
+                return new DefaultResponse
+                {
+                    Status = "Error",
+                    Message = "User not found!"
+                };
 
-                var authClaims = new List<Claim>
+            var userRoles = await _userManager.GetRolesAsync(user);
+
+            var authClaims = new List<Claim>
                 {
                     new Claim(ClaimTypes.Name, user.UserName),
                     new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 };
 
-                foreach (var userRole in userRoles)
-                {
-                    authClaims.Add(new Claim(ClaimTypes.Role, userRole));
-                }
-
-                var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
-
-                var token = new JwtSecurityToken(
-                    issuer: _configuration["JWT:ValidIssuer"],
-                    audience: _configuration["JWT:ValidAudience"],
-                    expires: DateTime.Now.AddHours(3),
-                    claims: authClaims,
-                    signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
-                    );
-
-                await _repos.SaveChangesAsync();
-
-                return new DefaultResponse
-                {
-                    Status = "Success",
-                    Message = "Token: " + new JwtSecurityTokenHandler().WriteToken(token)
-                };
+            foreach (var userRole in userRoles)
+            {
+                authClaims.Add(new Claim(ClaimTypes.Role, userRole));
             }
+
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["JWT:ValidIssuer"],
+                audience: _configuration["JWT:ValidAudience"],
+                expires: DateTime.Now.AddHours(3),
+                claims: authClaims,
+                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                );
+
+            //await _repos.SaveChangesAsync();
+
             return new DefaultResponse
             {
-                Status = "Error",
-                Message = "User not found!"
+                Status = "Success",
+                Message = "Token: " + new JwtSecurityTokenHandler().WriteToken(token),
+                Done = true
             };
         }
 
         public async Task<DefaultResponse> Register(RegisterModel registerModel)
         {
-            var userExists = await _userManager.FindByNameAsync(registerModel.Login);
+            var userLoginExists = await _userManager.FindByNameAsync(registerModel.Login);
 
-            if (userExists != null)
+            if (userLoginExists != null)
                 return new DefaultResponse { 
                     Status = "Error", 
-                    Message = "User already exists!" 
+                    Message = "User with this login already exists!",
+                    Done = false
                 };
 
             var user = new ApplicationUser()
             {
                 Email = registerModel.Email,
                 SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = registerModel.Login
+                UserName = registerModel.Login,
             };
 
             var result = await _userManager.CreateAsync(user, registerModel.Password);
@@ -183,27 +236,30 @@ namespace Reports.Services
             if (!result.Succeeded)
                 return new DefaultResponse { 
                     Status = "Error", 
-                    Message = "User creation failed! Please check user details and try again." 
+                    Message = "User creation failed! Errors: " + result.Errors,
+                    Done = false
                 };
 
-            var task = await Create(new User()
+            var creationTask = await Create(new User()
             {
                 Surname = registerModel.Surname,
                 Name = registerModel.Name,
                 Login = registerModel.Login
             });
 
-            if (task.Status == "Success")
+            if (creationTask.Done)
                 return new DefaultResponse
                 {
                     Status = "Success",
-                    Message = "User created successfully!"
+                    Message = "User created successfully!",
+                    Done = true
                 };
 
             return new DefaultResponse
             {
                 Status = "Error",
-                Message = "User not created!"
+                Message = "User not created!",
+                Done = false
             };
         }
     }

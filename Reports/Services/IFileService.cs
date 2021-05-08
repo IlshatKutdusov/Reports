@@ -7,12 +7,12 @@ namespace Reports.Services
 {
     public interface IFileService
     {
-        Task<File> GetById(int fileId);
+        Task<FileResponse> GetById(string requestUserLogin, int fileId);
 
-        Task<DefaultResponse> Create(File file);
-        Task<UploadFileResponse> UploadFile(string userLogin, IFormFile upload);
+        Task<FileResponse> UploadFile(string requestUserLogin, string userLogin, IFormFile upload);
 
-        Task<DefaultResponse> Update(File file);
-        Task<DefaultResponse> Remove(int fileId);
+        Task<DefaultResponse> Update(string requestUserLogin, File file);
+
+        Task<DefaultResponse> Remove(string requestUserLogin, int fileId);
     }
 }

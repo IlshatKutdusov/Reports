@@ -36,7 +36,8 @@ namespace Reports.Controllers
                 return BadRequest(new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "Message:  " + ex.Message
+                    Message = "Message:  " + ex.Message,
+                    Done = false
                 });
             }
         }
@@ -49,16 +50,20 @@ namespace Reports.Controllers
         {
             try
             {
-                var response = await _userService.Register(registerModel);
+                var registerResponse = await _userService.Register(registerModel);
 
-                return Ok(response);
+                if (registerResponse.Done)
+                    return Ok(registerResponse);
+
+                return BadRequest(registerResponse);
             }
             catch (Exception ex)
             {
                 return BadRequest(new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "Message:  " + ex.Message
+                    Message = "Message:  " + ex.Message,
+                    Done = false
                 });
             }
         }
@@ -68,26 +73,20 @@ namespace Reports.Controllers
         {
             try
             {
-                if (GetCurrentUserName() == userLogin)
-                {
-                    var user = await _userService.GetByLogin(userLogin);
+                var userResponse = await _userService.GetByLogin(GetCurrentUserName(), userLogin);
+                
+                if (userResponse.Done)
+                    return Ok(userResponse);
 
-                    if (user != null)
-                    {
-                        return Ok(user); 
-                    }
-
-                    return BadRequest("User not found!");
-                }
-
-                return BadRequest("Access is denied!");
+                return BadRequest(userResponse);
             }
             catch (Exception ex)
             {
                 return BadRequest(new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "Message:  " + ex.Message
+                    Message = "Message:  " + ex.Message,
+                    Done = false
                 });
             }
         }
@@ -97,21 +96,20 @@ namespace Reports.Controllers
         {
             try
             {
-                if (GetCurrentUserName() == user.Login)
-                {
-                    var response = await _userService.Update(user);
+                var updateResponse = await _userService.Update(GetCurrentUserName(), user);
 
-                    return Ok(response); 
-                }
+                if (updateResponse.Done)
+                    return Ok(updateResponse);
 
-                return BadRequest("Access is denied!");
+                return BadRequest(updateResponse);
             }
             catch (Exception ex)
             {
                 return BadRequest(new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "Message:  " + ex.Message
+                    Message = "Message:  " + ex.Message,
+                    Done = false
                 });
             }
         }
