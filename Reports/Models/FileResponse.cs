@@ -2,10 +2,8 @@
 
 namespace Reports.Models
 {
-    public class UploadFileResponse : DefaultResponse
+    public class FileResponse : DefaultResponse
     {
-        public bool Done { get; set; }
-
         public File? File { get; set; }
     }
 }
