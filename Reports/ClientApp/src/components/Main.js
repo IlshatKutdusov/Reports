@@ -4,7 +4,7 @@ import File from './File';
 import {CurrentUserContext} from '../contexts/CurrentUserContext';
 import {api} from '../utils/Api';
 
-export default function Main({ files }) {
+export default function Main({ files, setFiles }) {
   const [isAddFilePopupOpen, setIsAddFilePopupOpen] = React.useState(false);
   const [isCreateReportPopupOpen, setIsCreateReportPopupOpen] = React.useState(false);
   const [file, setFile] = React.useState({});
@@ -18,6 +18,10 @@ export default function Main({ files }) {
     setIsAddFilePopupOpen(true);
   }
 
+  function handleReportButtonClick() {
+    setIsCreateReportPopupOpen(true);
+  }
+
   function handleUploadFile(file) {
     setFile(file);
   }
@@ -28,6 +32,17 @@ export default function Main({ files }) {
     formData.append('upload', file, file.name);
     api
       .uploadFile(currentUser.login, formData)
+      .then((response) => {
+        setFiles([response.file, ...files]);
+        closeAllPopups();
+      })
+      .catch(error => console.log(error));
+  }
+
+  function deleteFile(id) {
+    api
+      .deleteFile(id)
+      .then(() => setFiles(files.filter(file => file.id !== id)))
       .catch(error => console.log(error));
   }
 
@@ -45,9 +60,12 @@ export default function Main({ files }) {
           files && files.map(file => (
             <File 
               key={file.id}
+              id={file.id}
               name={file.name}
               size={file.size}
               dateCreated={file.dateCreated}
+              onDelete={deleteFile}
+              onReportCreate={handleReportButtonClick}
             />
           ))
         }

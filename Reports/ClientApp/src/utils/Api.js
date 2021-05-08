@@ -54,6 +54,16 @@ class Api {
     .then(this._checkResponse);
   }
 
+  deleteFile(id) {
+    return fetch(`${this._baseUrl}/File?fileId=${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+      }
+    })
+    .then(this._checkResponse);
+  }
+
   _checkResponse(res) {
     if (res.ok) {
       return res.json();

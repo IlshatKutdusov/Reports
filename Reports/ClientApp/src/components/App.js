@@ -71,7 +71,7 @@ function App() {
                 <SignUpForm onSubmit={handleSignUp} />
               </Lobby>
             </Route>
-          <ProtectedRoute component={Main} path="/" isLoggedIn={isLoggedIn} files={files} />
+          <ProtectedRoute component={Main} path="/" isLoggedIn={isLoggedIn} files={files} setFiles={setFiles} />
           </Switch>
 
         <Footer />
