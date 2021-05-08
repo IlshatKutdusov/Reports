@@ -6,7 +6,7 @@ export default function PopupWithForm(props) {
       <h2 className="popup__title">{props.title}</h2>
       <form className="popup__form" name={props.name} onSubmit={props.onSubmit} action="#" noValidate>
         {props.children}
-        <button className="popup__save-button" type="submit">{props.buttonText}</button>
+        {props.buttonText && <button className="popup__save-button" type="submit">{props.buttonText}</button>}
       </form>
     </div>
   </div>

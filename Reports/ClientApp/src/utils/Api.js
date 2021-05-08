@@ -1,3 +1,5 @@
+import { getToken } from "./token";
+
 class Api {
   constructor({baseUrl, headers}) {
     this._baseUrl = baseUrl;
@@ -27,6 +29,27 @@ class Api {
         password: regData.password,
         surname: regData.surname,
       }),
+    })
+    .then(this._checkResponse);
+  }
+
+  getUserData(login) {
+    return fetch(`${this._baseUrl}/User?userLogin=${login}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`,
+      }
+    })
+    .then(this._checkResponse);
+  }
+
+  uploadFile(login, formData) {
+    return fetch(`${this._baseUrl}/File/Upload?userLogin=${login}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+      },
+      body: formData,
     })
     .then(this._checkResponse);
   }

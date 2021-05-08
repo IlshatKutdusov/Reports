@@ -9,11 +9,13 @@ import SignUpForm from './SignUpForm';
 import Main from './Main';
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
 import { api } from '../utils/Api';
+import { setToken } from '../utils/token';
 
 function App() {
   const [currentUser, setCurrentUser] = React.useState({});
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
   const history = useHistory();
 
   function handleSignIn(authData) {
@@ -21,12 +23,19 @@ function App() {
     api
       .authenticate(authData)
       .then(response => {
-        localStorage.setItem('jwt', response.token);
-        setCurrentUser({
-          login: response.login,
-        });
-        setIsLoggedIn(true);
-        history.push('/');
+        if (response.status === 'Success') {
+          setToken(response.message.split(' ')[1]);
+          api
+            .getUserData(authData.login)
+            .then((response) => {
+              setCurrentUser(response);
+              setIsLoggedIn(true);
+              history.push('/');
+            })
+            .catch(err => console.log(err));
+        } else {
+          setError(response.message);
+        }        
       })
       .catch(error => console.log(error))
       .finally(() => setIsLoading(false));
@@ -43,7 +52,7 @@ function App() {
       .finally(() => setIsLoading(false));
   }
 
-  return (isLoading ? <span className="loading">Загрузка...</span> : 
+  return (isLoading ? <span className="loading">Р—Р°РіСЂСѓР·РєР°...</span> : 
     <div className="page">
       <CurrentUserContext.Provider value={currentUser}>
         <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
@@ -51,7 +60,7 @@ function App() {
         <Switch>
             <Route exact path="/signin">
               <Lobby>
-                <SignInForm onSubmit={handleSignIn} />
+                <SignInForm onSubmit={handleSignIn} error={error} />
               </Lobby>
             </Route>
             <Route exact path="/signup">
