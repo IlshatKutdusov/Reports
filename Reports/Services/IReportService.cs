@@ -6,12 +6,12 @@ namespace Reports.Services
 {
     public interface IReportService
     {
-        Task<Report> GetById(int reportId);
+        Task<ReportResponse> GetById(string requestUserLogin, int reportId);
 
-        Task<DefaultResponse> Create(User user, File file, Report report);
-        Task<DefaultResponse> Generate(int fileId, string format);
+        Task<ReportResponse> GenerateFromFile(string requestUserLogin, int fileId, string format);
 
-        Task<DefaultResponse> Update(Report report);
-        Task<DefaultResponse> Remove(int reportId);
+        Task<DefaultResponse> Update(string requestUserLogin, Report report);
+
+        Task<DefaultResponse> Remove(string requestUserLogin, int reportId);
     }
 }

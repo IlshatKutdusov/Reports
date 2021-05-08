@@ -74,14 +74,16 @@ namespace Reports.Services.Helper
                 return new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "The uploaded аile is empty or no data filled!"
+                    Message = "The uploaded аile is empty or no data filled!",
+                    Done = false
                 };
 
             if (!dataIsCorrect(reportData))
                 return new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "The data in the uploaded file does not match the pattern!"
+                    Message = "The data in the uploaded file does not match the pattern!",
+                    Done = false
                 };
 
             using (var woekBook = new XLWorkbook())
@@ -168,7 +170,8 @@ namespace Reports.Services.Helper
             return new DefaultResponse()
             {
                 Status = "Success",
-                Message = "The report saved successfylly! (Excel)"
+                Message = "The report saved successfylly! (Excel)",
+                Done = true
             };
         }
 
@@ -180,14 +183,16 @@ namespace Reports.Services.Helper
                 return new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "The uploaded аile is empty or no data filled!"
+                    Message = "The uploaded аile is empty or no data filled!",
+                    Done = false
                 };
 
             if (!dataIsCorrect(reportData))
                 return new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "The data in the uploaded file does not match the pattern!"
+                    Message = "The data in the uploaded file does not match the pattern!",
+                    Done = false
                 };
 
             var document = new Document(PageSize.A4, 5f, 5f, 10f, 10f);
@@ -329,9 +334,6 @@ namespace Reports.Services.Helper
             cellDataFromFile.HorizontalAlignment = Element.ALIGN_CENTER;
             tableDataFromFile.AddCell(cellDataFromFile);
 
-            //tableDataFromFile.HeaderRows = 1;
-
-
             int currentRow = 0;
 
             foreach (DataRow data in reportData.Rows)
@@ -361,7 +363,8 @@ namespace Reports.Services.Helper
             return new DefaultResponse()
             {
                 Status = "Success",
-                Message = "The report saved successfylly! (PDF)"
+                Message = "The report saved successfylly! (PDF)",
+                Done = true
             };
         }
     }

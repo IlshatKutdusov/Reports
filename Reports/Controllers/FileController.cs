@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Reports.Models;
 using Reports.Entities;
@@ -13,12 +12,10 @@ namespace Reports.Controllers
     public class FileController : ApiControllerBase
     {
         private readonly IFileService _fileService;
-        private readonly IUserService _userService;
 
-        public FileController(IFileService fileService, IUserService userService)
+        public FileController(IFileService fileService)
         {
             _fileService = fileService;
-            _userService = userService;
         }
 
         [HttpGet]
@@ -26,54 +23,20 @@ namespace Reports.Controllers
         {
             try
             {
-                var file = await _fileService.GetById(fileId);
+                var fileResponse = await _fileService.GetById(GetCurrentUserName(), fileId);
 
-                if (file != null)
-                {
-                    var user = await _userService.GetById(file.UserId);
+                if (fileResponse.Done)
+                    return Ok(fileResponse);
 
-                    if (GetCurrentUserName() == user.Login)
-                    {
-                        return Ok(file);
-                    }
-
-                    return BadRequest("Access is denied!");
-                }
-
-                return BadRequest("The file not found!");
+                return BadRequest(fileResponse);
             }
             catch (Exception ex)
             {
                 return BadRequest(new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "Message:  " + ex.Message
-                });
-            }
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Create(File file)
-        {
-            try
-            {
-                var user = await _userService.GetById(file.UserId);
-
-                if (GetCurrentUserName() == user.Login)
-                {
-                    var response = await _fileService.Create(file);
-
-                    return Ok(response); 
-                }
-
-                return BadRequest("Access is denied!");
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new DefaultResponse()
-                {
-                    Status = "Error",
-                    Message = "Message:  " + ex.Message
+                    Message = "Message:  " + ex.Message,
+                    Done = false
                 });
             }
         }
@@ -84,21 +47,17 @@ namespace Reports.Controllers
         {
             try
             {
-                if (GetCurrentUserName() == userLogin && upload != null)
-                {
-                    var response = await _fileService.UploadFile(userLogin, upload);
+                var response = await _fileService.UploadFile(GetCurrentUserName(), userLogin, upload);
 
-                    return Ok(response); 
-                }
-
-                return BadRequest("Access is denied!");
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 return BadRequest(new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "Message:  " + ex.Message
+                    Message = "Message:  " + ex.Message,
+                    Done = false
                 });
             }
         }
@@ -108,23 +67,17 @@ namespace Reports.Controllers
         {
             try
             {
-                var user = await _userService.GetById(file.UserId);
+                var response = await _fileService.Update(GetCurrentUserName(), file);
 
-                if (GetCurrentUserName() == user.Login)
-                {
-                    var response = await _fileService.Update(file);
-
-                    return Ok(response); 
-                }
-
-                return BadRequest("Access is denied!");
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 return BadRequest(new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "Message:  " + ex.Message
+                    Message = "Message:  " + ex.Message,
+                    Done = false
                 });
             }
         }
@@ -134,32 +87,17 @@ namespace Reports.Controllers
         {
             try
             {
-                var file = await _fileService.GetById(fileId);
+                var response = await _fileService.Remove(GetCurrentUserName(), fileId);
 
-                if (file == null)
-                    return BadRequest(new DefaultResponse()
-                    {
-                        Status = "Error",
-                        Message = "The file not found!"
-                    });
-
-                var user = await _userService.GetById(file.UserId);
-
-                if (GetCurrentUserName() == user.Login)
-                {
-                    var response = await _fileService.Remove(fileId);
-
-                    return Ok(response); 
-                }
-
-                return BadRequest("Access is denied!");
+                return Ok(response);
             }
             catch (Exception ex)
             {
                 return BadRequest(new DefaultResponse()
                 {
                     Status = "Error",
-                    Message = "Message:  " + ex.Message
+                    Message = "Message:  " + ex.Message,
+                    Done = false
                 });
             }
         }
