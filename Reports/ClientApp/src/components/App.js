@@ -29,10 +29,10 @@ function App() {
           api
             .getUserData(authData.login)
             .then((response) => {
-              setCurrentUser(response);
+              setCurrentUser(response.user);
               setIsLoggedIn(true);
               console.log(response);
-              setFiles(response.files);
+              setFiles(response.user.files || []);
               history.push('/');
             })
             .catch(err => console.log(err));
