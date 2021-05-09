@@ -27,9 +27,12 @@ namespace Reports.Controllers
         {
             try
             {
-                var response = await _userService.Login(loginModel);
+                var loginResponse = await _userService.Login(loginModel);
 
-                return Ok(response);
+                if (loginResponse.Done)
+                    return Ok(loginResponse);
+
+                return BadRequest(loginResponse);
             }
             catch (Exception ex)
             {
@@ -73,12 +76,12 @@ namespace Reports.Controllers
         {
             try
             {
-                var userResponse = await _userService.GetByLogin(GetCurrentUserName(), userLogin);
+                var getByLoginResponse = await _userService.GetByLogin(GetCurrentUserName(), userLogin);
                 
-                if (userResponse.Done)
-                    return Ok(userResponse);
+                if (getByLoginResponse.Done)
+                    return Ok(getByLoginResponse);
 
-                return BadRequest(userResponse);
+                return BadRequest(getByLoginResponse);
             }
             catch (Exception ex)
             {

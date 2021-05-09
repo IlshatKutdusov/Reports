@@ -33,7 +33,7 @@ namespace Reports
             services.AddAutoMapper(typeof(Startup));
 
             services.AddScoped<IRepos, Repos>();
-            services.AddTransient<IReportBuilder, ReportBuilder>();
+            services.AddTransient<IFileHelper, FileHelper>();
             services.AddTransient<IFileService, FileService>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IReportService, ReportService>();

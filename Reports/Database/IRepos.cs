@@ -13,7 +13,7 @@ namespace Reports.Database
         IQueryable<T> Get<T>() where T : class, IBaseEntity;
         IQueryable<T> GetAll<T>() where T : class, IBaseEntity;
 
-        Task Add<T>(T newEntity) where T : class, IBaseEntity;
+        Task<int> Add<T>(T newEntity) where T : class, IBaseEntity;
         Task AddRange<T>(IEnumerable<T> newEntities) where T : class, IBaseEntity;
 
         Task Remove<T>(T entity) where T : class, IBaseEntity;
