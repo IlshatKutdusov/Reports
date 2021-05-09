@@ -6,6 +6,7 @@ using System.Linq;
 using Reports.Entities;
 using Microsoft.AspNetCore.Http;
 using Reports.Models;
+using Reports.Services.Helper;
 
 namespace Reports.Services
 {
@@ -16,12 +17,14 @@ namespace Reports.Services
         private readonly IMapper _mapper;
         private readonly IRepos _repos;
         private readonly IUserService _userService;
+        private readonly IFileHelper _reportBuilder;
 
-        public FileService(IMapper mapper, IRepos repos, IUserService userService)
+        public FileService(IMapper mapper, IRepos repos, IUserService userService, IFileHelper reportBuilder)
         {
             _mapper = mapper;
             _repos = repos;
             _userService = userService;
+            _reportBuilder = reportBuilder;
         }
 
         public async Task<FileResponse> GetById(string requestUserLogin, int fileId)
@@ -59,12 +62,65 @@ namespace Reports.Services
             };
         }
 
-        private async Task<DefaultResponse> Create(string requestUserLogin, File file)
+        public async Task<FileStreamResponse> GetFile(string requestUserLogin, int fileId)
         {
+            var file = await _repos.Get<File>().FirstOrDefaultAsync(e => e.Id == fileId);
+
+            if (file == null)
+                return new FileStreamResponse()
+                {
+                    Status = "Error",
+                    Message = "The file not found!",
+                    Done = false
+                };
+
             var userResponse = await _userService.GetById(requestUserLogin, file.UserId);
 
             if (!userResponse.Done)
-                return new DefaultResponse()
+                return new FileStreamResponse()
+                {
+                    Status = "Error",
+                    Message = userResponse.Message,
+                    Done = false
+                };
+
+            if (!System.IO.File.Exists(file.Path + file.Name))
+                return new FileStreamResponse()
+                {
+                    Status = "Error",
+                    Message = "The report not generated!",
+                    Done = false
+                };
+
+            var fs = new System.IO.FileStream(file.Path + file.Name, System.IO.FileMode.Open);
+
+            return new FileStreamResponse()
+            {
+                Status = "Success",
+                Message = "The file found successfully!",
+                Done = true,
+                FileStream = fs,
+                FileFormat = "application/csv",
+                FileName = file.Name
+            };
+        }
+
+        public async Task<ProvidersResponse> GetProviders(string requestUserLogin, int fileId)
+        {
+            var file = await _repos.Get<File>().FirstOrDefaultAsync(e => e.Id == fileId);
+
+            if (file == null)
+                return new ProvidersResponse()
+                {
+                    Status = "Error",
+                    Message = "The file not found!",
+                    Done = false
+                };
+
+            var userResponse = await _userService.GetById(requestUserLogin, file.UserId);
+
+            if (!userResponse.Done)
+                return new ProvidersResponse()
                 {
                     Status = "Error",
                     Message = userResponse.Message,
@@ -73,24 +129,22 @@ namespace Reports.Services
 
             var entity = _mapper.Map<File>(file);
 
-            var addTask = _repos.Add(entity);
-            addTask.Wait();
+            var providersResponse = await _reportBuilder.GetProviders(entity);
 
-            await _repos.SaveChangesAsync();
-
-            if (addTask.IsCompletedSuccessfully)
-                return new DefaultResponse()
+            if (providersResponse.Done)
+                return new ProvidersResponse()
                 {
                     Status = "Success",
-                    Message = "The file created successfully!",
-                    Done = true
-                }; 
+                    Message = "The file found successfully!",
+                    Done = true,
+                    Providers = providersResponse.Providers
+                };
 
-            return new DefaultResponse()
+            return new ProvidersResponse()
             {
                 Status = "Error",
-                Message = "The file not created!",
-                Done = false
+                Message = providersResponse.Message,
+                Done = false,
             };
         }
 
@@ -239,6 +293,41 @@ namespace Reports.Services
             {
                 Status = "Error",
                 Message = "The file not removed!",
+                Done = false
+            };
+        }
+
+        private async Task<DefaultResponse> Create(string requestUserLogin, File file)
+        {
+            var userResponse = await _userService.GetById(requestUserLogin, file.UserId);
+
+            if (!userResponse.Done)
+                return new DefaultResponse()
+                {
+                    Status = "Error",
+                    Message = userResponse.Message,
+                    Done = false
+                };
+
+            var entity = _mapper.Map<File>(file);
+
+            var addingTask = _repos.Add(entity);
+            addingTask.Wait();
+
+            await _repos.SaveChangesAsync();
+
+            if (addingTask.IsCompletedSuccessfully)
+                return new DefaultResponse()
+                {
+                    Status = "Success",
+                    Message = "The file created successfully!",
+                    Done = true
+                };
+
+            return new DefaultResponse()
+            {
+                Status = "Error",
+                Message = "The file not created!",
                 Done = false
             };
         }

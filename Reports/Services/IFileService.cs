@@ -9,6 +9,10 @@ namespace Reports.Services
     {
         Task<FileResponse> GetById(string requestUserLogin, int fileId);
 
+        Task<FileStreamResponse> GetFile(string requestUserLogin, int fileId);
+
+        Task<ProvidersResponse> GetProviders(string requestUserLogin, int fileId);
+
         Task<FileResponse> UploadFile(string requestUserLogin, string userLogin, IFormFile upload);
 
         Task<DefaultResponse> Update(string requestUserLogin, File file);

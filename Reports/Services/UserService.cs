@@ -105,12 +105,12 @@ namespace Reports.Services
         {
             var entity = _mapper.Map<User>(user);
 
-            var task = _repos.Add(entity);
-            task.Wait();
+            var creatingTask = _repos.Add(entity);
+            creatingTask.Wait();
 
             await _repos.SaveChangesAsync();
 
-            if (task.IsCompletedSuccessfully)
+            if (creatingTask.IsCompletedSuccessfully)
                 return new DefaultResponse()
                 {
                     Status = "Success",
@@ -148,12 +148,12 @@ namespace Reports.Services
 
             var entity = _mapper.Map<User>(user);
 
-            var task = _repos.Update(entity);
-            task.Wait();
+            var updatingTask = _repos.Update(entity);
+            updatingTask.Wait();
 
             await _repos.SaveChangesAsync();
 
-            if (task.IsCompletedSuccessfully)
+            if (updatingTask.IsCompletedSuccessfully)
                 return new DefaultResponse()
                 {
                     Status = "Success",
