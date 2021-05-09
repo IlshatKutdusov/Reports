@@ -28,9 +28,10 @@ namespace Reports.Database
             return _context.Set<T>().AsQueryable();
         }
 
-        public async Task Add<T>(T newEntity) where T : class, IBaseEntity
+        public async Task<int> Add<T>(T newEntity) where T : class, IBaseEntity
         {
-            await _context.Set<T>().AddAsync(newEntity);
+            var entity = await _context.Set<T>().AddAsync(newEntity);
+            return entity.Entity.Id;
         }
 
         public async Task AddRange<T>(IEnumerable<T> newEntities) where T : class, IBaseEntity

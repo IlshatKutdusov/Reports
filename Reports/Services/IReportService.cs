@@ -8,7 +8,11 @@ namespace Reports.Services
     {
         Task<ReportResponse> GetById(string requestUserLogin, int reportId);
 
-        Task<ReportResponse> GenerateFromFile(string requestUserLogin, int fileId, string format);
+        Task<FileStreamResponse> GetFile(string requestUserLogin, int reportId);
+
+        Task<ReportResponse> Generate(string requestUserLogin, int fileId, string format);
+
+        Task<ReportResponse> Generate(string requestUserLogin, int fileId, string format, string provider);
 
         Task<DefaultResponse> Update(string requestUserLogin, Report report);
 
