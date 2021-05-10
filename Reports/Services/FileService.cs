@@ -5,7 +5,7 @@ using AutoMapper;
 using System.Linq;
 using Reports.Entities;
 using Microsoft.AspNetCore.Http;
-using Reports.Models;
+using Reports.Models.Responses;
 using Reports.Services.Helper;
 
 namespace Reports.Services
@@ -42,12 +42,20 @@ namespace Reports.Services
             var userResponse = await _userService.GetById(requestUserLogin, file.UserId);
 
             if (!userResponse.Done)
+                return new FileResponse(userResponse);
+
+            if (!System.IO.File.Exists(file.Path + file.Name))
+            {
+                await _repos.Remove<File>(file);
+                await _repos.SaveChangesAsync();
+
                 return new FileResponse()
                 {
                     Status = "Error",
-                    Message = userResponse.Message,
+                    Message = "The source file not found!",
                     Done = false
                 };
+            }
 
             var reports = _repos.Get<Report>().Where(e => e.FileId == file.Id).ToList();
 
@@ -64,35 +72,12 @@ namespace Reports.Services
 
         public async Task<FileStreamResponse> GetFile(string requestUserLogin, int fileId)
         {
-            var file = await _repos.Get<File>().FirstOrDefaultAsync(e => e.Id == fileId);
+            var fileResponse = await GetById(requestUserLogin, fileId);
 
-            if (file == null)
-                return new FileStreamResponse()
-                {
-                    Status = "Error",
-                    Message = "The file not found!",
-                    Done = false
-                };
+            if (!fileResponse.Done)
+                return new FileStreamResponse(fileResponse);
 
-            var userResponse = await _userService.GetById(requestUserLogin, file.UserId);
-
-            if (!userResponse.Done)
-                return new FileStreamResponse()
-                {
-                    Status = "Error",
-                    Message = userResponse.Message,
-                    Done = false
-                };
-
-            if (!System.IO.File.Exists(file.Path + file.Name))
-                return new FileStreamResponse()
-                {
-                    Status = "Error",
-                    Message = "The report not generated!",
-                    Done = false
-                };
-
-            var fs = new System.IO.FileStream(file.Path + file.Name, System.IO.FileMode.Open);
+            var fs = new System.IO.FileStream(fileResponse.File.Path + fileResponse.File.Name, System.IO.FileMode.Open);
 
             return new FileStreamResponse()
             {
@@ -101,7 +86,7 @@ namespace Reports.Services
                 Done = true,
                 FileStream = fs,
                 FileFormat = "application/csv",
-                FileName = file.Name
+                FileName = fileResponse.File.Name
             };
         }
 
@@ -120,12 +105,7 @@ namespace Reports.Services
             var userResponse = await _userService.GetById(requestUserLogin, file.UserId);
 
             if (!userResponse.Done)
-                return new ProvidersResponse()
-                {
-                    Status = "Error",
-                    Message = userResponse.Message,
-                    Done = false
-                };
+                return new ProvidersResponse(userResponse);
 
             var entity = _mapper.Map<File>(file);
 
@@ -140,12 +120,7 @@ namespace Reports.Services
                     Providers = providersResponse.Providers
                 };
 
-            return new ProvidersResponse()
-            {
-                Status = "Error",
-                Message = providersResponse.Message,
-                Done = false,
-            };
+            return new ProvidersResponse(providersResponse);
         }
 
         public async Task<FileResponse> UploadFile(string requestUserLogin, string userLogin, IFormFile uploadedFile)
@@ -163,12 +138,7 @@ namespace Reports.Services
             var userResponse = await _userService.GetByLogin(requestUserLogin, userLogin);
 
             if (!userResponse.Done)
-                return new FileResponse()
-                {
-                    Status = "Error",
-                    Message = userResponse.Message,
-                    Done = false
-                };
+                return new FileResponse(userResponse);
 
             if (!System.IO.Directory.Exists(ApplicationPath))
                 System.IO.Directory.CreateDirectory(ApplicationPath);
@@ -208,12 +178,7 @@ namespace Reports.Services
                 };
             }
 
-            return new FileResponse()
-            {
-                Status = "Error",
-                Message = "The file already exists! " + creationTask.Message,
-                Done = false
-            };
+            return new FileResponse(creationTask);
         }
 
         public async Task<DefaultResponse> Update(string requestUserLogin, File file)
@@ -289,7 +254,7 @@ namespace Reports.Services
                 };
             }
 
-            return new CreationResponse()
+            return new DefaultResponse()
             {
                 Status = "Error",
                 Message = "The file not removed!",

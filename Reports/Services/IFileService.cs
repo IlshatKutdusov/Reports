@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Reports.Entities;
-using Reports.Models;
+using Reports.Models.Responses;
 
 namespace Reports.Services
 {

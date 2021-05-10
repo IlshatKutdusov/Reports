@@ -1,4 +1,4 @@
-﻿namespace Reports.Models
+﻿namespace Reports.Models.Responses
 {
     public class DefaultResponse
     {

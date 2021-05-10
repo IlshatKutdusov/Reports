@@ -1,7 +1,7 @@
 ﻿using ClosedXML.Excel;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
-using Reports.Models;
+using Reports.Models.Responses;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
