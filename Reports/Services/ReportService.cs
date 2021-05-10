@@ -5,6 +5,7 @@ using Reports.Entities;
 using AutoMapper;
 using Reports.Models;
 using Reports.Services.Helper;
+using Reports.Models.Responses;
 
 namespace Reports.Services
 {
@@ -16,9 +17,9 @@ namespace Reports.Services
         private readonly IRepos _repos;
         private readonly IFileService _fileService;
         private readonly IUserService _userService;
-        private readonly IFileHelper _reportBuilder;
+        private readonly IReportBuilder _reportBuilder;
 
-        public ReportService(IMapper mapper, IRepos repos, IFileService fileService, IUserService userService, IFileHelper reportBuilder)
+        public ReportService(IMapper mapper, IRepos repos, IFileService fileService, IUserService userService, IReportBuilder reportBuilder)
         {
             _mapper = mapper;
             _repos = repos;
@@ -42,22 +43,25 @@ namespace Reports.Services
             var userResponse = await _userService.GetById(requestUserLogin, report.UserId);
 
             if (!userResponse.Done)
-                return new ReportResponse()
-                {
-                    Status = "Error",
-                    Message = userResponse.Message,
-                    Done = false
-                };
+                return new ReportResponse(userResponse);
 
             var fileResponse = await _fileService.GetById(requestUserLogin, report.FileId);
 
             if (!fileResponse.Done)
+                return new ReportResponse(fileResponse);
+
+            if (!System.IO.File.Exists(report.Path + report.Name))
+            {
+                await _repos.Remove<Report>(report);
+                await _repos.SaveChangesAsync();
+
                 return new ReportResponse()
                 {
                     Status = "Error",
-                    Message = userResponse.Message,
+                    Message = "The report file not found!",
                     Done = false
                 };
+            }
 
             var entity = _mapper.Map<Report>(report);
 
@@ -72,45 +76,22 @@ namespace Reports.Services
 
         public async Task<FileStreamResponse> GetFile(string requestUserLogin, int reportId)
         {
-            var report = await _repos.Get<Report>().FirstOrDefaultAsync(e => e.Id == reportId);
+            var reportResponse = await GetById(requestUserLogin, reportId);
 
-            if (report == null)
-                return new FileStreamResponse()
-                {
-                    Status = "Error",
-                    Message = "The report not found!",
-                    Done = false
-                };
+            if (!reportResponse.Done)
+                return new FileStreamResponse(reportResponse);
 
-            var userResponse = await _userService.GetById(requestUserLogin, report.UserId);
+            var userResponse = await _userService.GetById(requestUserLogin, reportResponse.Report.UserId);
 
             if (!userResponse.Done)
-                return new FileStreamResponse()
-                {
-                    Status = "Error",
-                    Message = userResponse.Message,
-                    Done = false
-                };
+                return new FileStreamResponse(userResponse);
 
-            var fileResponse = await _fileService.GetById(requestUserLogin, report.FileId);
+            var fileResponse = await _fileService.GetById(requestUserLogin, reportResponse.Report.FileId);
 
             if (!fileResponse.Done)
-                return new FileStreamResponse()
-                {
-                    Status = "Error",
-                    Message = userResponse.Message,
-                    Done = false
-                };
+                return new FileStreamResponse(fileResponse);
 
-            if (!System.IO.File.Exists(report.Path + report.Name))
-                return new FileStreamResponse()
-                {
-                    Status = "Error",
-                    Message = "The report not generated!",
-                    Done = false
-                };
-
-            var fs = new System.IO.FileStream(report.Path + report.Name, System.IO.FileMode.Open);
+            var fs = new System.IO.FileStream(reportResponse.Report.Path + reportResponse.Report.Name, System.IO.FileMode.Open);
 
             return new FileStreamResponse()
             {
@@ -118,8 +99,8 @@ namespace Reports.Services
                 Message = "The report found successfully!",
                 Done = true,
                 FileStream = fs,
-                FileFormat = "application/" + report.Format.Substring(1),
-                FileName = report.Name
+                FileFormat = "application/" + reportResponse.Report.Format.Substring(1),
+                FileName = reportResponse.Report.Name
             };
         }
 
@@ -128,12 +109,7 @@ namespace Reports.Services
             var fileResponse = await _fileService.GetById(requestUserLogin, fileId);
 
             if (!fileResponse.Done)
-                return new ReportResponse()
-                {
-                    Status = "Error",
-                    Message = fileResponse.Message,
-                    Done = false
-                };
+                return new ReportResponse(fileResponse);
 
             var userResponse = await _userService.GetById(requestUserLogin, fileResponse.File.UserId);
 
@@ -172,41 +148,20 @@ namespace Reports.Services
             var creationTask = await Create(userResponse.User, fileResponse.File, newReport);
 
             if (creationTask.Done)
-                return new ReportResponse()
+                return new ReportResponse(creationTask)
                 {
-                    Status = "Success",
-                    Message = creationTask.Message,
-                    Done = true,
                     Report = newReport
                 };
 
-            return new ReportResponse()
-            {
-                Status = "Error",
-                Message = "The report not created! " + creationTask.Message,
-                Done = false
-            };
+            return new ReportResponse(creationTask);
         }
 
         public async Task<ReportResponse> Generate(string requestUserLogin, int fileId, string format, string provider)
         {
-            if (provider == null)
-                return new ReportResponse()
-                {
-                    Status = "Error",
-                    Message = "The provider cannot be NULL!",
-                    Done = false
-                };
-
             var fileResponse = await _fileService.GetById(requestUserLogin, fileId);
 
             if (!fileResponse.Done)
-                return new ReportResponse()
-                {
-                    Status = "Error",
-                    Message = fileResponse.Message,
-                    Done = false
-                };
+                return new ReportResponse(fileResponse);
 
             var userResponse = await _userService.GetById(requestUserLogin, fileResponse.File.UserId);
 
@@ -215,6 +170,14 @@ namespace Reports.Services
                 {
                     Status = "Error",
                     Message = "This format is not supported! (only .xlsx or .pdf)",
+                    Done = false
+                };
+
+            if (provider == null)
+                return new ReportResponse()
+                {
+                    Status = "Error",
+                    Message = "The provider cannot be NULL!",
                     Done = false
                 };
 
@@ -245,20 +208,12 @@ namespace Reports.Services
             var creationTask = await Create(userResponse.User, fileResponse.File, newReport, provider);
 
             if (creationTask.Done)
-                return new ReportResponse()
+                return new ReportResponse(creationTask)
                 {
-                    Status = "Success",
-                    Message = creationTask.Message,
-                    Done = true,
                     Report = newReport
                 };
 
-            return new ReportResponse()
-            {
-                Status = "Error",
-                Message = "The report not created! " + creationTask.Message,
-                Done = false
-            };
+            return new ReportResponse(creationTask);
         }
 
         public async Task<DefaultResponse> Update(string requestUserLogin, Report report)
@@ -375,7 +330,7 @@ namespace Reports.Services
         private async Task<DefaultResponse> Create(User user, File file, Report report, string provider)
         {
             if (provider == null)
-                return new ReportResponse()
+                return new DefaultResponse()
                 {
                     Status = "Error",
                     Message = "The provider cannot be NULL!",
@@ -490,12 +445,7 @@ namespace Reports.Services
                     Done = true
                 };
 
-            return new DefaultResponse()
-            {
-                Status = "Error",
-                Message = "The report not generated! " + savingTask.Message,
-                Done = false
-            };
+            return savingTask;
         }
     }
 }

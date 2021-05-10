@@ -8,6 +8,7 @@ using Reports.Services;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Reports.Models.Responses;
 
 namespace Reports.Controllers
 {

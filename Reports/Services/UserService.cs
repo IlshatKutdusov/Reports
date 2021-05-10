@@ -6,6 +6,7 @@ using System.Linq;
 using Reports.Entities;
 using Microsoft.Extensions.Configuration;
 using Reports.Models;
+using Reports.Models.Responses;
 using Microsoft.AspNetCore.Identity;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -51,9 +52,7 @@ namespace Reports.Services
                     Done = false
                 };
 
-            var files = _repos.Get<File>().Where(e => e.UserId == user.Id).ToList();
-
-            var reports = _repos.Get<Report>().Where(e => e.UserId == user.Id).ToList();
+            //var files = _repos.Get<File>().Where(e => e.UserId == user.Id).ToList();
 
             var entity = _mapper.Map<User>(user);
 
