@@ -17,14 +17,14 @@ namespace Reports.Services
         private readonly IMapper _mapper;
         private readonly IRepos _repos;
         private readonly IUserService _userService;
-        private readonly IFileHelper _reportBuilder;
+        private readonly IFileHelper _fileHelper;
 
-        public FileService(IMapper mapper, IRepos repos, IUserService userService, IFileHelper reportBuilder)
+        public FileService(IMapper mapper, IRepos repos, IUserService userService, IFileHelper fileHelper)
         {
             _mapper = mapper;
             _repos = repos;
             _userService = userService;
-            _reportBuilder = reportBuilder;
+            _fileHelper = fileHelper;
         }
 
         public async Task<FileResponse> GetById(string requestUserLogin, int fileId)
@@ -109,7 +109,7 @@ namespace Reports.Services
 
             var entity = _mapper.Map<File>(file);
 
-            var providersResponse = await _reportBuilder.GetProviders(entity);
+            var providersResponse = await _fileHelper.GetProviders(entity);
 
             if (providersResponse.Done)
                 return new ProvidersResponse()
@@ -125,6 +125,14 @@ namespace Reports.Services
 
         public async Task<FileResponse> UploadFile(string requestUserLogin, string userLogin, IFormFile uploadedFile)
         {
+            if (uploadedFile == null)
+                return new FileResponse() 
+                { 
+                    Status = "Error",
+                    Message = "The file to be uploaded must not be NULL!",
+                    Done = false
+                };
+
             string uploadFileName = uploadedFile.FileName.Substring(uploadedFile.FileName.Length - 4);
 
             if (uploadFileName != ".csv")
@@ -169,13 +177,24 @@ namespace Reports.Services
                     await uploadedFile.CopyToAsync(fileStream);
                 }
 
-                return new FileResponse()
-                {
-                    Status = "Success",
-                    Message = "The file uploaded successfully!",
-                    Done = true,
-                    File = file
-                };
+                var dataCheckedResponse = await _fileHelper.SourceFileDataCheck(file);
+
+                if (dataCheckedResponse.Done)
+                    return new FileResponse()
+                    {
+                        Status = "Success",
+                        Message = "The file uploaded successfully!",
+                        Done = true,
+                        File = file
+                    };
+
+                var fileEntity = await _repos.Get<File>().FirstOrDefaultAsync(e => e.Name == file.Name);
+                await _repos.Remove<File>(fileEntity);
+                await _repos.SaveChangesAsync();
+
+                System.IO.File.Delete(fileEntity.Path + fileEntity.Name);
+
+                return new FileResponse(dataCheckedResponse);
             }
 
             return new FileResponse(creationTask);

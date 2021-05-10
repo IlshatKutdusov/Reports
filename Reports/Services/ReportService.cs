@@ -17,9 +17,9 @@ namespace Reports.Services
         private readonly IRepos _repos;
         private readonly IFileService _fileService;
         private readonly IUserService _userService;
-        private readonly IFileHelper _reportBuilder;
+        private readonly IReportBuilder _reportBuilder;
 
-        public ReportService(IMapper mapper, IRepos repos, IFileService fileService, IUserService userService, IFileHelper reportBuilder)
+        public ReportService(IMapper mapper, IRepos repos, IFileService fileService, IUserService userService, IReportBuilder reportBuilder)
         {
             _mapper = mapper;
             _repos = repos;
