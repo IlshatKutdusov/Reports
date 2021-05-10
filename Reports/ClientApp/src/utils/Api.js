@@ -15,7 +15,7 @@ class Api {
         password: authData.password,
       }),
     })
-    .then(this._checkResponse);
+    .then(this._checkJsonResponse);
   }
 
   register(regData) {
@@ -30,7 +30,7 @@ class Api {
         surname: regData.surname,
       }),
     })
-    .then(this._checkResponse);
+    .then(this._checkJsonResponse);
   }
 
   getUserData(login) {
@@ -40,7 +40,7 @@ class Api {
         'Authorization': `Bearer ${getToken()}`,
       }
     })
-    .then(this._checkResponse);
+    .then(this._checkJsonResponse);
   }
 
   uploadFile(login, formData) {
@@ -51,7 +51,26 @@ class Api {
       },
       body: formData,
     })
-    .then(this._checkResponse);
+    .then(this._checkJsonResponse);
+  }
+
+  getFile(id) {
+    return fetch(`${this._baseUrl}/File/File?fileId=${id}`, {
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+      }
+    })
+    .then(this._checkBlobResponse);
+  }
+
+  getProviders(id) {
+    return fetch(`${this._baseUrl}/File/Providers?fileId=${id}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`,
+      }
+    })
+    .then(this._checkJsonResponse);
   }
 
   deleteFile(id) {
@@ -61,10 +80,47 @@ class Api {
         'Authorization': `Bearer ${getToken()}`,
       }
     })
-    .then(this._checkResponse);
+    .then(this._checkJsonResponse);
   }
 
-  _checkResponse(res) {
+  generateReport(fileId, format) {
+    return fetch(`${this._baseUrl}/Report/Generate?fileId=${fileId}&&format=${format}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+      }
+    })
+    .then(this._checkJsonResponse);
+  }
+
+  generateReportWithProvider(fileId, format, provider) {
+    return fetch(`${this._baseUrl}/Report/GenerateWithProvider?fileId=${fileId}&&format=${format}&&provider=${provider}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+      }
+    })
+    .then(this._checkJsonResponse);
+  }
+
+  getReportFile(id) {
+    return fetch(`${this._baseUrl}/Report/File?reportId=${id}`, {
+      headers: {
+        'Authorization': `Bearer ${getToken()}`,
+      }
+    })
+    .then(this._checkBlobResponse);
+  }
+
+  _checkBlobResponse(res) {
+    if (res.ok) {
+      return res.blob();
+    }
+
+    return Promise.reject(`Ошибка: ${res.status}`);
+  }
+
+  _checkJsonResponse(res) {
     if (res.ok) {
       return res.json();
     }

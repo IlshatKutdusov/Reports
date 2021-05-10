@@ -31,7 +31,6 @@ function App() {
             .then((response) => {
               setCurrentUser(response.user);
               setIsLoggedIn(true);
-              console.log(response);
               setFiles(response.user.files || []);
               history.push('/');
             })

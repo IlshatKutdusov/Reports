@@ -3,23 +3,38 @@ import PopupWithForm from './PopupWithForm';
 import File from './File';
 import {CurrentUserContext} from '../contexts/CurrentUserContext';
 import {api} from '../utils/Api';
+import ReportPreviewPopup from './ReportPreviewPopup';
+import ReportPopup from './ReportPopup';
 
 export default function Main({ files, setFiles }) {
   const [isAddFilePopupOpen, setIsAddFilePopupOpen] = React.useState(false);
   const [isCreateReportPopupOpen, setIsCreateReportPopupOpen] = React.useState(false);
+  const [isReportPreviewPopupOpen, setIsReportPreviewPopupOpen] = React.useState(false);
   const [file, setFile] = React.useState({});
+  const [providers, setProviders] = React.useState([]);
+  const [reportLink, setReportLink] = React.useState('');
+  const [currentFile, setCurrentFile] = React.useState(0);
   const currentUser = React.useContext(CurrentUserContext);
+
   function closeAllPopups() {
     setIsAddFilePopupOpen(false);
     setIsCreateReportPopupOpen(false);
+    setIsReportPreviewPopupOpen(false);
   }
 
   function handleAddButtonClick() {
     setIsAddFilePopupOpen(true);
   }
 
-  function handleReportButtonClick() {
-    setIsCreateReportPopupOpen(true);
+  function handleReportButtonClick(file) {
+    api
+      .getProviders(file.id)
+      .then(response => {
+        setProviders(response.providers);
+        setCurrentFile(file);
+        setIsCreateReportPopupOpen(true);
+      })
+      .catch(error => console.error(error));
   }
 
   function handleUploadFile(file) {
@@ -28,7 +43,7 @@ export default function Main({ files, setFiles }) {
 
   function sendFile(e) {
     e.preventDefault();
-    let formData = new FormData();
+    const formData = new FormData();
     formData.append('upload', file, file.name);
     api
       .uploadFile(currentUser.login, formData)
@@ -36,17 +51,47 @@ export default function Main({ files, setFiles }) {
         setFiles([response.file, ...files]);
         closeAllPopups();
       })
-      .catch(error => console.log(error));
+      .catch(error => console.error(error));
   }
 
   function deleteFile(id) {
     api
       .deleteFile(id)
       .then(() => setFiles(files.filter(file => file.id !== id)))
-      .catch(error => console.log(error));
+      .catch(error => console.error(error));
   }
 
-  React.useEffect(() => console.log(files), []);
+  function handleReportFormSubmit(fileId, format, provider) {
+    const searchCallback = report => report.format === `.${format}`;
+    if (currentFile.reports && currentFile.reports.some(searchCallback)) {
+      const report = currentFile.reports.find(searchCallback);
+      api
+        .getReportFile(report.id)
+        .then(response => {
+          setReportLink(URL.createObjectURL(response));
+          closeAllPopups();
+          setIsReportPreviewPopupOpen(true);
+        })
+        .catch(error => console.error(error));
+      return;
+    }
+
+    const request = provider === 'all' ? api.generateReport(fileId, format) :
+      api.generateReportWithProvider(fileId, format, provider);
+
+    request
+      .then(response => {
+        api
+          .getReportFile(response.report.id)
+          .then(response => {
+            setReportLink(URL.createObjectURL(response));
+            closeAllPopups();
+            setIsReportPreviewPopupOpen(true);
+          })
+          .catch(error => console.error(error));
+      })
+      .catch(error => console.error(error));
+  }
 
   return (
     <main className="content">
@@ -60,10 +105,7 @@ export default function Main({ files, setFiles }) {
           files && files.map(file => (
             <File 
               key={file.id}
-              id={file.id}
-              name={file.name}
-              size={file.size}
-              dateCreated={file.dateCreated}
+              file={file}
               onDelete={deleteFile}
               onReportCreate={handleReportButtonClick}
             />
@@ -76,13 +118,20 @@ export default function Main({ files, setFiles }) {
         <button onClick={(e) => sendFile(e)}>Отправить</button>
       </PopupWithForm>
 
-      <PopupWithForm name="" buttonText="Создать" title="Создать отчёт" isOpen={isCreateReportPopupOpen} onClose={closeAllPopups}>
-        <input className="form__input" type="text" placeholder="Название" required />
-        <select className="form__select">
-          <option value="pdf">PDF</option>
-          <option value="excel">Excel</option>
-        </select>
-      </PopupWithForm>
+      <ReportPopup 
+        isOpen={isCreateReportPopupOpen}
+        providers={providers} 
+        currentFileId={currentFile.id}
+        onClose={closeAllPopups}
+        onSubmit={handleReportFormSubmit}
+      />
+
+      <ReportPreviewPopup
+        name=""
+        reportLink={reportLink}
+        isOpen={isReportPreviewPopupOpen}
+        onClose={closeAllPopups}
+      />
     </main>
   );
 }
