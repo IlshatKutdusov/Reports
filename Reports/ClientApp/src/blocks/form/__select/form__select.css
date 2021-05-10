@@ -14,6 +14,6 @@
   background-size: 12px;
 }
 
-.form__select_active {
+.form__select:focus {
   background-image: url('../../../images/arrow-reverse.png');
 }
