@@ -54,7 +54,7 @@ function App() {
       .finally(() => setIsLoading(false));
   }
 
-  return (isLoading ? <span className="loading">Загрузка...</span> : 
+  return (
     <div className="page">
       <CurrentUserContext.Provider value={currentUser}>
         <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
@@ -62,7 +62,7 @@ function App() {
         <Switch>
             <Route exact path="/signin">
               <Lobby>
-                <SignInForm onSubmit={handleSignIn} error={error} />
+                <SignInForm onSubmit={handleSignIn} error={error} isLoading={isLoading}/>
               </Lobby>
             </Route>
             <Route exact path="/signup">
