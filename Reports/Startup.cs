@@ -34,6 +34,7 @@ namespace Reports
 
             services.AddScoped<IRepos, Repos>();
             services.AddTransient<IFileHelper, FileHelper>();
+            services.AddTransient<IReportBuilder, ReportBuilder>();
             services.AddTransient<IFileService, FileService>();
             services.AddTransient<IUserService, UserService>();
             services.AddTransient<IReportService, ReportService>();

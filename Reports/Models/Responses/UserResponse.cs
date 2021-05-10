@@ -1,6 +1,6 @@
 ﻿using Reports.Entities;
 
-namespace Reports.Models
+namespace Reports.Models.Responses
 {
     public class UserResponse : DefaultResponse
     {

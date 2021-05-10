@@ -1,5 +1,5 @@
 ﻿using Reports.Entities;
-using Reports.Models;
+using Reports.Models.Responses;
 using System.Threading.Tasks;
 
 namespace Reports.Services

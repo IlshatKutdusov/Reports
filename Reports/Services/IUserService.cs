@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
-using Reports.Models;
+using Reports.Models.Responses;
 using Reports.Entities;
+using Reports.Models;
 
 namespace Reports.Services
 {
