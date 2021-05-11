@@ -1,18 +1,22 @@
 import React from 'react';
+import { Route, Switch, useHistory } from 'react-router';
 import Header from './Header';
 import Footer from './Footer';
 import Lobby from './Lobby';
-import { Route, Switch, useHistory } from 'react-router';
 import ProtectedRoute from './ProtectedRoute';
 import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
+import Main from './Main';
 import { CurrentUserContext } from '../contexts/CurrentUserContext';
 import { api } from '../utils/Api';
+import { setToken } from '../utils/token';
 
 function App() {
   const [currentUser, setCurrentUser] = React.useState({});
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState('');
+  const [files, setFiles] = React.useState([]);
   const history = useHistory();
 
   function handleSignIn(authData) {
@@ -20,12 +24,20 @@ function App() {
     api
       .authenticate(authData)
       .then(response => {
-        localStorage.setItem('jwt', response.token);
-        setCurrentUser({
-          login: response.login,
-        });
-        setIsLoggedIn(true);
-        history.push('/');
+        if (response.status === 'Success') {
+          setToken(response.message.split(' ')[1]);
+          api
+            .getUserData(authData.login)
+            .then((response) => {
+              setCurrentUser(response.user);
+              setIsLoggedIn(true);
+              setFiles(response.user.files || []);
+              history.push('/');
+            })
+            .catch(err => console.log(err));
+        } else {
+          setError(response.message);
+        }        
       })
       .catch(error => console.log(error))
       .finally(() => setIsLoading(false));
@@ -42,7 +54,7 @@ function App() {
       .finally(() => setIsLoading(false));
   }
 
-  return (
+  return (isLoading ? <span className="loading">Загрузка...</span> : 
     <div className="page">
       <CurrentUserContext.Provider value={currentUser}>
         <Header isLoggedIn={isLoggedIn} setIsLoggedIn={setIsLoggedIn} />
@@ -50,7 +62,7 @@ function App() {
         <Switch>
             <Route exact path="/signin">
               <Lobby>
-                <SignInForm onSubmit={handleSignIn} />
+                <SignInForm onSubmit={handleSignIn} error={error} />
               </Lobby>
             </Route>
             <Route exact path="/signup">
@@ -58,8 +70,7 @@ function App() {
                 <SignUpForm onSubmit={handleSignUp} />
               </Lobby>
             </Route>
-            <ProtectedRoute path="/" isLoggedIn={isLoggedIn}>
-            </ProtectedRoute>
+          <ProtectedRoute component={Main} path="/" isLoggedIn={isLoggedIn} files={files} setFiles={setFiles} />
           </Switch>
 
         <Footer />

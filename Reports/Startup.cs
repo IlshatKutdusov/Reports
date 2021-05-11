@@ -1,19 +1,17 @@
+using Infrastructure;
+using Infrastructure.Identity;
+using Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Reports.Models;
-using Reports.Database;
-using Reports.Services;
 using System.Text;
-using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
-using Reports.Services.Helper;
 
 namespace Reports
 {
@@ -28,17 +26,9 @@ namespace Reports
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<DataContext>(options => options.UseNpgsql(_configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Singleton);
+            services.AddInfrastructure(_configuration);
 
             services.AddAutoMapper(typeof(Startup));
-
-            services.AddScoped<IRepos, Repos>();
-            services.AddTransient<IFileHelper, FileHelper>();
-            services.AddTransient<IReportBuilder, ReportBuilder>();
-            services.AddTransient<IFileService, FileService>();
-            services.AddTransient<IUserService, UserService>();
-            services.AddTransient<IReportService, ReportService>();
-            services.AddSingleton(new ApplicationUser());
 
             services.AddControllers();
             services.AddIdentity<ApplicationUser, IdentityRole>()
