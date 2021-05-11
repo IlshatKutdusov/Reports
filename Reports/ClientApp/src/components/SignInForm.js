@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function SignInForm({ onSubmit, error }) {
+export default function SignInForm({ onSubmit, error, isLoading }) {
   const [login, setLogin] = React.useState('');
   const [password, setPassword] = React.useState('');
 
@@ -27,8 +27,7 @@ export default function SignInForm({ onSubmit, error }) {
       <input className="form__input" type="password" placeholder="Пароль" required onChange={handlePasswordInput} value = { password || '' }/>
       {error && <span className="error">{error}</span>}
       <div className="form__button-container">
-        <button className="form__button form__button_type_login" type="submit">Войти</button>
-        <a className="link link_type_forgot" href="#">Забыли пароль?</a>
+        <button className="form__button form__button_type_login" type="submit">{isLoading ? 'Загрузка...' : 'Войти'}</button>
       </div>
     </form>
   );
