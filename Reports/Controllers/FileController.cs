@@ -1,12 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Application.Common.Interfaces;
+using Application.Common.Models.Responses;
+using Domain.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Reports.Models;
-using Reports.Entities;
-using Reports.Services;
 using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Reports.Models.Responses;
 
 namespace Reports.Controllers
 {
