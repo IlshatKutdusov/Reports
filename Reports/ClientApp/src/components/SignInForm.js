@@ -28,7 +28,6 @@ export default function SignInForm({ onSubmit, error, isLoading }) {
       {error && <span className="error">{error}</span>}
       <div className="form__button-container">
         <button className="form__button form__button_type_login" type="submit">{isLoading ? 'Загрузка...' : 'Войти'}</button>
-        <a className="link link_type_forgot" href="#">Забыли пароль?</a>
       </div>
     </form>
   );
