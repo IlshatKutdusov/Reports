@@ -49,6 +49,7 @@ export default function Main({ files, setFiles }) {
       .uploadFile(currentUser.login, formData)
       .then((response) => {
         setFiles([response.file, ...files]);
+        setCurrentFile(response.file);
         closeAllPopups();
       })
       .catch(error => console.error(error));
@@ -62,7 +63,7 @@ export default function Main({ files, setFiles }) {
   }
 
   function handleReportFormSubmit(fileId, format, provider) {
-    const searchCallback = report => report.format === `.${format}`;
+    const searchCallback = report => report.format === `.${format}` && report.provider === `${provider}`;
     if (currentFile.reports && currentFile.reports.some(searchCallback)) {
       const report = currentFile.reports.find(searchCallback);
       api
@@ -83,8 +84,8 @@ export default function Main({ files, setFiles }) {
       .then(response => {
         api
           .getReportFile(response.report.id)
-          .then(response => {
-            setReportLink(URL.createObjectURL(response));
+          .then(response1 => {
+            setReportLink(URL.createObjectURL(response1));
             closeAllPopups();
             setIsReportPreviewPopupOpen(true);
           })
@@ -97,7 +98,7 @@ export default function Main({ files, setFiles }) {
     <main className="content">
       <div className="content__header">
         <h2 className="content__title">Файлы с начислениями</h2>
-        <button className="content__button" onClick={handleAddButtonClick}> Загрузить файл</button>
+        <button className="content__button" onClick={handleAddButtonClick}>Загрузить файл</button>
       </div>
 
       <ul className="files">
@@ -113,7 +114,7 @@ export default function Main({ files, setFiles }) {
         }
       </ul>
 
-      <PopupWithForm name="" buttonText="Добавить" isOpen={isAddFilePopupOpen} onClose={closeAllPopups}>
+      <PopupWithForm name="" isOpen={isAddFilePopupOpen} onClose={closeAllPopups}>
         <input type="file" onChange={e => handleUploadFile(e.target.files[0])} />
         <button onClick={(e) => sendFile(e)}>Отправить</button>
       </PopupWithForm>

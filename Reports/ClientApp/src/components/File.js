@@ -33,7 +33,7 @@ export default function File({file: fileData, onDelete, onReportCreate}) {
         <p className="file__info">{`${formatDate(fileData.dateCreated)}, ${fileData.size} MB`}</p>
       </div>   
       <div className="file__button-container">
-        <button className="file__report-button" title="Создать отчёт" onClick={handleReportCreate}></button>
+        <button className="file__report-button" title="Сгенерировать отчёт" onClick={handleReportCreate}></button>
         <button className="file__remove-button" title="Удалить" onClick={handleDelete}></button>
       </div>
     </div>

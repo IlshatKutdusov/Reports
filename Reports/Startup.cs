@@ -122,7 +122,7 @@ namespace Reports
                 if (env.IsDevelopment())
                 {
                     spa.UseReactDevelopmentServer("start");
-                    spa.UseProxyToSpaDevelopmentServer("http://localhost:3000");
+                    //spa.UseProxyToSpaDevelopmentServer("http://localhost:3000");
                 }
             });
         }

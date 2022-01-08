@@ -30,7 +30,7 @@ namespace Infrastructure.Services
             _mapper = mapper;
             _databaseService = databaseService;
             _configuration = configuration;
-            this._userManager = userManager;
+            _userManager = userManager;
         }
 
         public async Task<UserResponse> GetById(string requestUserLogin, int userId)
@@ -53,14 +53,24 @@ namespace Infrastructure.Services
                     Done = false
                 };
 
-            //var files = _repos.Get<File>().Where(e => e.UserId == user.Id).ToList();
+            user.Files = await _databaseService.Get<File>().Where(e => e.UserId == user.Id).ToListAsync();
+
+            var reports = await _databaseService.Get<Report>().Where(e => e.UserId == user.Id).ToListAsync();
+
+            foreach (var file in user.Files)
+            {
+                if (reports.Any(x => x.FileId == file.Id))
+                {
+                    file.Reports = reports.Where(x => x.FileId == file.Id).ToList();
+                }
+            }
 
             var entity = _mapper.Map<User>(user);
 
             return new UserResponse()
             {
                 Status = "Success",
-                Message = "The file found successfully!",
+                Message = "User found successfully!",
                 Done = true,
                 User = entity
             };
@@ -86,9 +96,18 @@ namespace Infrastructure.Services
                     Done = false
                 };
 
-            var files = _databaseService.Get<File>().Where(e => e.UserId == user.Id).ToList();
+            
+            user.Files = _databaseService.Get<File>().Where(e => e.UserId == user.Id).ToList();
 
             var reports = _databaseService.Get<Report>().Where(e => e.UserId == user.Id).ToList();
+
+            foreach (var file in user.Files)
+            {
+                if (reports.Any(x => x.FileId == file.Id))
+                {
+                    file.Reports = reports.Where(x => x.FileId == file.Id).ToList();
+                }
+            }
 
             var entity = _mapper.Map<User>(user);
 
@@ -236,7 +255,7 @@ namespace Infrastructure.Services
             if (!result.Succeeded)
                 return new DefaultResponse { 
                     Status = "Error", 
-                    Message = "User creation failed! Errors: " + result.Errors,
+                    Message = "User creation failed! Errors: " + string.Join("; ", result.Errors.Select(x => x.Description)),
                     Done = false
                 };
 

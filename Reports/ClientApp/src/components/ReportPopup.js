@@ -15,8 +15,8 @@ export default function ReportPopup({isOpen, onClose, currentFileId, onSubmit, p
   return (
     <PopupWithForm 
       name="" 
-      buttonText="Создать" 
-      title="Создать отчёт" 
+      buttonText="Сгенирировать" 
+      title="Сгенирировать отчёт" 
       isOpen={isOpen} 
       onClose={onClose}
       onSubmit={handleSubmit}

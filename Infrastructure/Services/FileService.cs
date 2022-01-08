@@ -56,7 +56,7 @@ namespace Infrastructure.Services
                 };
             }
 
-            var reports = _databaseService.Get<Report>().Where(e => e.FileId == file.Id).ToList();
+            file.Reports = await _databaseService.Get<Report>().Where(e => e.FileId == file.Id).ToListAsync();
 
             var entity = _mapper.Map<File>(file);
 
@@ -73,7 +73,7 @@ namespace Infrastructure.Services
         {
             var fileResponse = await GetById(requestUserLogin, fileId);
 
-            if (!fileResponse.Done)
+            if (!fileResponse.Done || fileResponse.File == null)
                 return new FileStreamResponse(fileResponse);
 
             var fs = new System.IO.FileStream(fileResponse.File.Path + fileResponse.File.Name, System.IO.FileMode.Open);
@@ -239,7 +239,7 @@ namespace Infrastructure.Services
         {
             var fileResponse = await GetById(requestUserLogin, fileId);
 
-            if (!fileResponse.Done)
+            if (!fileResponse.Done || fileResponse.File == null)
                 return new DefaultResponse()
                 {
                     Status = "Error",

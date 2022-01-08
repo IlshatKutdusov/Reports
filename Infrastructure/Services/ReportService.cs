@@ -76,7 +76,7 @@ namespace Infrastructure.Services
         {
             var reportResponse = await GetById(requestUserLogin, reportId);
 
-            if (!reportResponse.Done)
+            if (!reportResponse.Done || reportResponse.Report == null)
                 return new FileStreamResponse(reportResponse);
 
             var userResponse = await _userService.GetById(requestUserLogin, reportResponse.Report.UserId);
@@ -102,11 +102,11 @@ namespace Infrastructure.Services
             };
         }
 
-        public async Task<ReportResponse> Generate(string requestUserLogin, int fileId, string format)
+        public async Task<ReportResponse> Generate(string requestUserLogin, int fileId, string format, string provider = "")
         {
             var fileResponse = await _fileService.GetById(requestUserLogin, fileId);
 
-            if (!fileResponse.Done)
+            if (!fileResponse.Done || fileResponse.File == null)
                 return new ReportResponse(fileResponse);
 
             var userResponse = await _userService.GetById(requestUserLogin, fileResponse.File.UserId);
@@ -119,18 +119,40 @@ namespace Infrastructure.Services
                     Done = false
                 };
 
-            string _format = ".xlsx";
+            var fileProvidersResponse = await _fileService.GetProviders(requestUserLogin, fileId);
+            
+            if (!fileProvidersResponse.Done || fileProvidersResponse.Providers == null)
+                return new ReportResponse(fileProvidersResponse);
+
+            if (provider == "")
+                provider = "all";
+            
+            if (provider != "all" && !fileProvidersResponse.Providers.Contains(provider))
+                return new ReportResponse()
+                {
+                    Status = "Error",
+                    Message = "The provider not found!",
+                    Done = false
+                };
+
+            var selectedFormat = ".xlsx";
 
             if (format == "pdf")
-                _format = ".pdf";
+                selectedFormat = ".pdf";
+
+            var innerMessage = "_";
+
+            if (provider != "all")
+                innerMessage += provider + "_";
 
             var newReport = new Report()
             {
                 UserId = fileResponse.File.UserId,
                 FileId = fileResponse.File.Id,
-                Name = "Report_" + fileResponse.File.Name.Remove(fileResponse.File.Name.Length - 4, 4) + _format,
+                Name = "Report" + innerMessage + fileResponse.File.Name.Remove(fileResponse.File.Name.Length - 4, 4) + selectedFormat,
                 Path = ApplicationPath,
-                Format = _format
+                Format = selectedFormat,
+                Provider = provider
             };
 
             if (fileResponse.File.Reports != null)
@@ -143,67 +165,9 @@ namespace Infrastructure.Services
                             Done = false
                         };
 
-            var creationTask = await Create(userResponse.User, fileResponse.File, newReport);
-
-            if (creationTask.Done)
-                return new ReportResponse(creationTask)
-                {
-                    Report = newReport
-                };
-
-            return new ReportResponse(creationTask);
-        }
-
-        public async Task<ReportResponse> Generate(string requestUserLogin, int fileId, string format, string provider)
-        {
-            var fileResponse = await _fileService.GetById(requestUserLogin, fileId);
-
-            if (!fileResponse.Done)
-                return new ReportResponse(fileResponse);
-
-            var userResponse = await _userService.GetById(requestUserLogin, fileResponse.File.UserId);
-
-            if (!(format == "xlsx" || format == "pdf"))
-                return new ReportResponse()
-                {
-                    Status = "Error",
-                    Message = "This format is not supported! (only .xlsx or .pdf)",
-                    Done = false
-                };
-
-            if (provider == null)
-                return new ReportResponse()
-                {
-                    Status = "Error",
-                    Message = "The provider cannot be NULL!",
-                    Done = false
-                };
-
-            string _format = ".xlsx";
-
-            if (format == "pdf")
-                _format = ".pdf";
-
-            var newReport = new Report()
-            {
-                UserId = fileResponse.File.UserId,
-                FileId = fileResponse.File.Id,
-                Name = "Report_" + provider + "_" + fileResponse.File.Name.Remove(fileResponse.File.Name.Length - 4, 4) + _format,
-                Path = ApplicationPath,
-                Format = _format
-            };
-
-            if (fileResponse.File.Reports != null)
-                foreach (var report in fileResponse.File.Reports)
-                    if (report.Name == newReport.Name)
-                        return new ReportResponse()
-                        {
-                            Status = "Error",
-                            Message = "A report of this type has already been created!",
-                            Done = false
-                        };
-
-            var creationTask = await Create(userResponse.User, fileResponse.File, newReport, provider);
+            var creationTask = provider == "all" 
+                ? await Create(userResponse.User, fileResponse.File, newReport) 
+                : await Create(userResponse.User, fileResponse.File, newReport, provider);
 
             if (creationTask.Done)
                 return new ReportResponse(creationTask)
@@ -253,7 +217,7 @@ namespace Infrastructure.Services
         {
             var reportResponse = await GetById(requestUserLogin, reportId);
 
-            if (!reportResponse.Done)
+            if (!reportResponse.Done || reportResponse.Report == null)
                 return new DefaultResponse()
                 {
                     Status = "Error",
@@ -261,7 +225,7 @@ namespace Infrastructure.Services
                     Done = false
                 };
 
-            var removingTask = _databaseService.Remove<Report>(reportResponse.Report);
+            var removingTask = _databaseService.Remove(reportResponse.Report);
             removingTask.Wait();
 
             await _databaseService.SaveChangesAsync();

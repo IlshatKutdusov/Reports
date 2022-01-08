@@ -95,8 +95,8 @@ namespace Infrastructure.Files
                 };
 
             var providers = new List<string>();
-
-            providers.AddRange(csvDataTable.Providers.Keys);
+            
+            providers.AddRange(csvDataTable.Providers.Keys.Where(x => x != "Название"));
 
             return new ProvidersResponse()
             {

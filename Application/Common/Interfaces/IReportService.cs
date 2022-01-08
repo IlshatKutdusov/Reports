@@ -10,9 +10,7 @@ namespace Application.Common.Interfaces
 
         Task<FileStreamResponse> GetFile(string requestUserLogin, int reportId);
 
-        Task<ReportResponse> Generate(string requestUserLogin, int fileId, string format);
-
-        Task<ReportResponse> Generate(string requestUserLogin, int fileId, string format, string provider);
+        Task<ReportResponse> Generate(string requestUserLogin, int fileId, string format, string provider = "");
 
         Task<DefaultResponse> Update(string requestUserLogin, Report report);
 

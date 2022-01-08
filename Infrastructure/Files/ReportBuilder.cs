@@ -438,7 +438,7 @@ namespace Infrastructure.Files
         {
             var csvDataTable = GetProviderDataTable(file.Path + file.Name, provider);
 
-            if (!csvDataTable.Providers.ContainsKey(provider.ToString()))
+            if (!csvDataTable.Providers.ContainsKey(provider))
                 return new DefaultResponse()
                 {
                     Status = "Error",
@@ -557,7 +557,7 @@ namespace Infrastructure.Files
         {
             var csvDataTable = GetProviderDataTable(file.Path + file.Name, provider);
 
-            if (!csvDataTable.Providers.ContainsKey(provider.ToString()))
+            if (!csvDataTable.Providers.ContainsKey(provider))
                 return new DefaultResponse()
                 {
                     Status = "Error",
